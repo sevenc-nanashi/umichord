@@ -5,6 +5,17 @@ import { baseLineY, rowHeight } from "./base";
 import { renderChord, type Chord } from "./chord";
 import { renderPunctuation, type Punctuation } from "./punctation";
 
+export { width, rowHeight } from "./base.ts";
+
+export function countRows(chords: Chord[], punctations: Punctuation[]) {
+  return (
+    Math.max(
+      ...chords.map((chord) => chord.position[0]),
+      ...punctations.map((p) => ("row" in p ? p.row : p.position[0])),
+    ) + 1
+  );
+}
+
 export function render(
   canvas: CanvasRenderingContext2D,
   chords: Chord[],

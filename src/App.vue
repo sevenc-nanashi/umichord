@@ -5,7 +5,7 @@ import Editor from "./components/Editor.vue";
 </script>
 <template>
   <div class="app">
-    <Header un-grid-area="header" />
+    <Header un-grid-area="header" un-h="[4rem]" />
     <section un-grid-area="renderer"><Renderer /></section>
     <section un-grid-area="editor"><Editor /></section>
   </div>
@@ -18,5 +18,6 @@ import Editor from "./components/Editor.vue";
     "header header"
     "renderer editor";
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr;
 }
 </style>

@@ -27,16 +27,16 @@ describe("parseScore", () => {
       expect(chords[0].position[0]).toBe(0); // row 0
       expect(chords[1].position[0]).toBe(1); // row 1
     });
-    test("~ のみの行はコードを生成せず row もインクリメントしない", () => {
-      const { chords } = parseScore("1\n~ ~ ~\n2");
+    test("_ のみの行はコードを生成せず row もインクリメントしない", () => {
+      const { chords } = parseScore("1\n_ _ _\n2");
       expect(chords).toHaveLength(2);
       expect(chords[0].position[0]).toBe(0);
-      expect(chords[1].position[0]).toBe(1); // ~ 行に row を消費しない
+      expect(chords[1].position[0]).toBe(1); // _ 行に row を消費しない
     });
-    test("_ のみの行はノーコードを生成し row をインクリメントする", () => {
-      const { chords } = parseScore("1\n_\n2");
+    test("~ のみの行はノーコードを生成し row をインクリメントする", () => {
+      const { chords } = parseScore("1\n~\n2");
       expect(chords[0].position[0]).toBe(0);
-      expect(chords[1].position[0]).toBe(1); // _ はコード扱いなので row 1
+      expect(chords[1].position[0]).toBe(1); // ~ はコード扱いなので row 1
       expect(chords[2].position[0]).toBe(2);
     });
   });
@@ -120,20 +120,20 @@ describe("parseScore", () => {
     });
   });
 
-  describe("_ と ~", () => {
-    test("_ はノーコード (root: null)", () => {
-      const { chords } = parseScore("1 _ 2");
+  describe("~ と _", () => {
+    test("~ はノーコード (root: null)", () => {
+      const { chords } = parseScore("1 ~ 2");
       expect(chords).toHaveLength(3);
       expect(chords[1].root).toBeNull();
     });
-    test("~ は空白（コードを生成しない）", () => {
-      const { chords } = parseScore("1 ~ 2");
+    test("_ は空白（コードを生成しない）", () => {
+      const { chords } = parseScore("1 _ 2");
       expect(chords).toHaveLength(2);
       expect(chords[0].root).toBe("i");
       expect(chords[1].root).toBe("ii");
     });
-    test("~ でも位置は正しく計算される", () => {
-      const { chords } = parseScore("1 ~ 2");
+    test("_ でも位置は正しく計算される", () => {
+      const { chords } = parseScore("1 _ 2");
       expect(positionValue(chords[1])).toBeCloseTo(2 / 3);
     });
   });

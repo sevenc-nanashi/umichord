@@ -187,8 +187,8 @@ export function parseChordString(s: string): ChordData {
 
   // tensions
   const tensions: ChordData["tensions"] = [];
-  if (s[pos] === "[") {
-    const end = s.indexOf("]", pos);
+  if (s[pos] === "(") {
+    const end = s.indexOf(")", pos);
     if (end === -1) throw new ParseError(`Unclosed tension bracket in: "${s}"`);
     for (const ch of s.slice(pos + 1, end)) {
       tensions.push(parseTensionChar(ch, s));

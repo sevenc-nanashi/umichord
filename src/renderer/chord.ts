@@ -71,7 +71,7 @@ const shiftAmount = dotRadius * 8;
 const chordDotRadius = dotRadius;
 const nonDiatonicLoopSize = dotRadius * 2;
 const firstTensionLength = dotRadius * 3;
-const attachmentShift = chordDotRadius * 2;
+const attachmentShift = dotRadius * 1;
 const susDotRadius = dotRadius * 0.5;
 const nonDiatonicSusLength = dotRadius * 2;
 const omitCircleRadius = dotRadius * 2;
@@ -118,12 +118,7 @@ function drawRoot(
       canvas.bezierCurveTo(left, curveControlPointOffset, right, curveControlPointOffset, right, 0);
       canvas.stroke();
       centerY = curveControlPointOffset * 0.75;
-      drawLineLastAttachment(
-        canvas,
-        right - attachmentShift,
-        curveControlPointOffset * 0.5,
-        chord.firstTension,
-      );
+      drawLineLastAttachment(canvas, right, 0, chord.firstTension);
       break;
     case "iib":
       canvas.beginPath();
@@ -203,12 +198,7 @@ function drawRoot(
       );
       canvas.stroke();
       centerY = -curveControlPointOffset * 0.75;
-      drawLineLastAttachment(
-        canvas,
-        right - attachmentShift,
-        -curveControlPointOffset * 0.5,
-        chord.firstTension,
-      );
+      drawLineLastAttachment(canvas, right, 0, chord.firstTension);
       break;
     case "vb":
       canvas.beginPath();
@@ -416,7 +406,7 @@ function drawFifthShift(
 }
 
 function drawTensions(canvas: CanvasRenderingContext2D, chord: Chord, right: number) {
-  let tensionX = right;
+  let tensionX = right - tensionRadius;
   const tensionY = (tensionRadius / 2) * (chord.tensions.length + 1) + centerAttachmentShift;
   for (let i = chord.tensions.length - 1; i >= 0; i--) {
     const tension = chord.tensions[i];

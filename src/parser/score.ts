@@ -112,8 +112,8 @@ function parseLayoutTokens(s: string): LayoutToken[] {
   return rawTokens.map((raw) => {
     const { content, weight } = extractWeight(raw);
 
-    if (content === "_") return { kind: "noChord", weight };
-    if (content === "~") return { kind: "blank", weight };
+    if (content === "~") return { kind: "noChord", weight };
+    if (content === "_") return { kind: "blank", weight };
 
     if (content.startsWith("[") && content.endsWith("]")) {
       const inner = content.slice(1, -1);

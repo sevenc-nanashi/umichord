@@ -152,16 +152,16 @@ describe("parseChordString", () => {
 
   describe("テンション", () => {
     test("[=]: 9th=natural", () => {
-      expect(parseChordString("1M7[=]").tensions).toEqual(["natural"]);
+      expect(parseChordString("1M7(=)").tensions).toEqual(["natural"]);
     });
     test("[+_=]: 9th=sharp, 11th=null, 13th=natural", () => {
-      expect(parseChordString("1M7[+_=]").tensions).toEqual(["sharp", null, "natural"]);
+      expect(parseChordString("1M7(+_=)").tensions).toEqual(["sharp", null, "natural"]);
     });
     test("[+_+]: 9th=sharp, 11th=null, 13th=sharp", () => {
-      expect(parseChordString("1M7[+_+]").tensions).toEqual(["sharp", null, "sharp"]);
+      expect(parseChordString("1M7(+_+)").tensions).toEqual(["sharp", null, "sharp"]);
     });
     test("[-]: 9th=flat", () => {
-      expect(parseChordString("1[-]").tensions).toEqual(["flat"]);
+      expect(parseChordString("1(-)").tensions).toEqual(["flat"]);
     });
   });
 
@@ -226,16 +226,16 @@ describe("parseChordString", () => {
       expect(c.firstTension).toBe("flipped");
       expect(c.fifthShift).toBe("sharp");
     });
-    test("1M7[=]: IMaj7(add9)", () => {
-      const c = parseChordString("1M7[=]");
+    test("1M7(=): IMaj7(add9)", () => {
+      const c = parseChordString("1M7(=)");
       expect(c.tensions).toEqual(["natural"]);
     });
-    test("1M7[+_=]: IMaj7(add#9,13)", () => {
-      const c = parseChordString("1M7[+_=]");
+    test("1M7(+_=): IMaj7(add#9,13)", () => {
+      const c = parseChordString("1M7(+_=)");
       expect(c.tensions).toEqual(["sharp", null, "natural"]);
     });
-    test("1M7[+_+]: IMaj7(add#9,#13)", () => {
-      const c = parseChordString("1M7[+_+]");
+    test("1M7(+_+): IMaj7(add#9,#13)", () => {
+      const c = parseChordString("1M7(+_+)");
       expect(c.tensions).toEqual(["sharp", null, "sharp"]);
     });
   });
