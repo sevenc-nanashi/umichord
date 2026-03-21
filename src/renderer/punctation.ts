@@ -1,4 +1,12 @@
-import { baseLineY, paddingLeft, rowHeight, width, type Length, type Position } from "./base.ts";
+import {
+  baseLineY,
+  dotRadius,
+  paddingLeft,
+  rowHeight,
+  width,
+  type Length,
+  type Position,
+} from "./base.ts";
 import { ExhaustiveError } from "../lib/error.ts";
 
 /**
@@ -127,7 +135,6 @@ function renderKey(canvas: CanvasRenderingContext2D, p: Extract<Punctuation, { t
   }
 }
 
-const dotRadius = (rowHeight / 16) * 0.8;
 function renderMajorSection(
   canvas: CanvasRenderingContext2D,
   _p: Extract<Punctuation, { type: "majorSection" }>,

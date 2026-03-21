@@ -5,6 +5,9 @@ import icons from "unplugin-icons/vite";
 import { FileSystemIconLoader } from "unplugin-icons/loaders";
 
 export default defineConfig({
+  server: {
+    forwardConsole: true,
+  },
   plugins: [
     uno(),
     vize(),
@@ -12,7 +15,7 @@ export default defineConfig({
       customCollections: {
         svg: FileSystemIconLoader("./src/assets/svg"),
       },
-      iconCustomizer(collection, icon, props) {
+      iconCustomizer(collection, _icon, props) {
         if (collection === "svg") {
           props.width = "auto";
           props.height = "auto";
