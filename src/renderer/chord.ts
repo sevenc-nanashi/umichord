@@ -41,12 +41,8 @@ export type Chord =
       omitFifth: boolean;
       /** 7th/6th/b6th */
       firstTension: "diatonic" | "flipped" | "6th" | "b6th" | null;
-      /** テンション */
-      tensions: {
-        9: -1 | 0 | 1 | null;
-        11: -1 | 0 | 1 | null;
-        13: -1 | 0 | 1 | null;
-      };
+      /** 9th以降のテンション（順番に9th, 11th, 13th、...） */
+      tensions: ("flat" | "sharp" | "natural" | null)[];
       /** b5/#5 **/
       fifthShift: "flat" | "sharp" | null;
       /** 分数コード */
@@ -61,11 +57,7 @@ export type Chord =
       omitFifth: false;
       sus: null;
       firstTension: null;
-      tensions: {
-        9: null;
-        11: null;
-        13: null;
-      };
+      tensions: [];
       fifthShift: null;
       slashBass: null;
     };
@@ -84,6 +76,7 @@ const susDotRadius = dotRadius * 0.5;
 const nonDiatonicSusLength = dotRadius * 2;
 const omitCircleRadius = dotRadius * 2;
 const fifthShiftLength = dotRadius * 1;
+const tensionRadius = dotRadius;
 export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const positionLeft = new Fraction(chord.position[1], chord.position[2]);
   const positionRight = positionLeft.add(new Fraction(chord.length[0], chord.length[1]));
@@ -383,6 +376,58 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   }
 
   canvas.translate(0, shiftY);
+  let tensionX = right;
+  const tensionY = (tensionRadius / 2) * (chord.tensions.length + 1) + centerAttachmentShift;
+  for (let i = chord.tensions.length - 1; i >= 0; i--) {
+    const tension = chord.tensions[i];
+    if (tension === null) {
+      continue;
+    }
+    const tensionTopY = tensionY + (chord.tensions.length - 1 - i) * tensionRadius;
+    const tensionBottomY = tensionTopY + tensionRadius * 2 * (i + 1);
+    if (i === 0) {
+      if (tension === "sharp") {
+        canvas.beginPath();
+        canvas.moveTo(tensionX, tensionTopY - tensionRadius);
+        canvas.lineTo(tensionX, tensionTopY - tensionRadius * 2);
+        canvas.stroke();
+      }
+      canvas.beginPath();
+      canvas.arc(tensionX, tensionTopY, tensionRadius, 0, 2 * Math.PI);
+      canvas.stroke();
+      if (tension === "flat") {
+        canvas.beginPath();
+        canvas.moveTo(tensionX, tensionTopY + tensionRadius);
+        canvas.lineTo(tensionX, tensionTopY + tensionRadius * 2);
+        canvas.stroke();
+      }
+    } else {
+      if (tension === "sharp") {
+        canvas.beginPath();
+        canvas.moveTo(tensionX, tensionTopY - tensionRadius);
+        canvas.lineTo(tensionX, tensionTopY);
+        canvas.stroke();
+      }
+      for (let j = 0; j < i; j++) {
+        canvas.beginPath();
+        canvas.arc(
+          tensionX,
+          tensionTopY + j * tensionRadius * 2 + tensionRadius,
+          tensionRadius,
+          -Math.PI / 2,
+          Math.PI / 2,
+        );
+        canvas.stroke();
+      }
+      if (tension === "flat") {
+        canvas.beginPath();
+        canvas.moveTo(tensionX, tensionBottomY + tensionRadius);
+        canvas.lineTo(tensionX, tensionBottomY);
+        canvas.stroke();
+      }
+    }
+    tensionX -= tensionRadius * 2;
+  }
 }
 
 const sixthShift = dotRadius;

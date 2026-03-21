@@ -22,18 +22,14 @@ function queueRerender() {
           position: [0, 0, 1],
           length: [1, 4],
           firstTension: null,
-          flat5th: false,
+          fifthShift: null,
           omitFifth: false,
           omitThird: false,
           root: null,
           slashBass: null,
           sus: null,
           variant: "diatonic",
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [0, 1, 4],
@@ -45,11 +41,7 @@ function queueRerender() {
           root: "i",
           slashBass: null,
           variant: "diatonic",
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [0, 2, 4],
@@ -61,11 +53,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [0, 3, 4],
@@ -77,11 +65,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [1, 0, 4],
@@ -93,11 +77,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [1, 1, 4],
@@ -109,11 +89,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [1, 2, 4],
@@ -125,11 +101,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [1, 3, 4],
@@ -141,11 +113,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [2, 0, 4],
@@ -157,11 +125,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [2, 1, 4],
@@ -173,11 +137,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [2, 2, 4],
@@ -189,11 +149,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [2, 3, 4],
@@ -205,11 +161,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [3, 0, 4],
@@ -221,11 +173,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [4, 0, 4],
@@ -237,11 +185,7 @@ function queueRerender() {
           omitThird: true,
           omitFifth: true,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [4, 1, 4],
@@ -253,11 +197,7 @@ function queueRerender() {
           omitThird: false,
           omitFifth: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: [],
         },
         {
           position: [4, 2, 4],
@@ -269,11 +209,7 @@ function queueRerender() {
           omitThird: false,
           omitFifth: false,
           slashBass: null,
-          tensions: {
-            "9": null,
-            "11": null,
-            "13": null,
-          },
+          tensions: ["sharp", "natural", "sharp"],
         },
       ],
       [
