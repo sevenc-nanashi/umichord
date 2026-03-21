@@ -1,0 +1,56 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 54939db19ff0f5c42addd2f45c288643c8b5347d..4397ef08d007e7b65a8af6ca2b7f147a14c3dbf9 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -23,6 +23,16 @@ const VIRTUAL_ENTRY_ALIAS = [/^(?:virtual:)?uno(?::(.+))?\.css(\?.*)?$/];
+ const defaultPipelineExclude = [cssIdRE];
+ const defaultPipelineInclude = [/\.(vue|svelte|[jt]sx|vine.ts|mdx?|astro|elm|php|phtml|marko|html)($|\?)/];
+ //#endregion
++
++function wrapFilter(filter) {
++	return (id) => {
++		const isVizeVue = id.startsWith("\x00") && id.endsWith(".vue.ts");
++		if (isVizeVue) return true;
++		return filter(id)
++	}
++}
++
++
+ //#region ../../virtual-shared/integration/src/context.ts
+ function createContext(configOrPath, defaults = {}, extraConfigSources = [], resolveConfigResult = () => {}) {
+ 	let root = process.cwd();
+@@ -33,7 +43,7 @@ function createContext(configOrPath, defaults = {}, extraConfigSources = [], res
+ 		uno = r;
+ 		return r;
+ 	});
+-	let rollupFilter = createFilter(defaultPipelineInclude, defaultPipelineExclude, { resolve: typeof configOrPath === "string" ? configOrPath : root });
++	let rollupFilter = wrapFilter(createFilter(defaultPipelineInclude, defaultPipelineExclude, { resolve: typeof configOrPath === "string" ? configOrPath : root }));
+ 	const invalidations = [];
+ 	const reloadListeners = [];
+ 	const modules = new BetterMap();
+@@ -51,7 +61,7 @@ function createContext(configOrPath, defaults = {}, extraConfigSources = [], res
+ 		configFileList = result.sources;
+ 		await uno.setConfig(rawConfig);
+ 		uno.config.envMode = "dev";
+-		rollupFilter = rawConfig.content?.pipeline === false ? () => false : createFilter(rawConfig.content?.pipeline?.include || defaultPipelineInclude, rawConfig.content?.pipeline?.exclude || defaultPipelineExclude, { resolve: typeof configOrPath === "string" ? configOrPath : root });
++		rollupFilter = wrapFilter(rawConfig.content?.pipeline === false ? () => false : createFilter(rawConfig.content?.pipeline?.include || defaultPipelineInclude, rawConfig.content?.pipeline?.exclude || defaultPipelineExclude, { resolve: typeof configOrPath === "string" ? configOrPath : root }));
+ 		tokens.clear();
+ 		await Promise.all(modules.map((code, id) => uno.applyExtractors(code.replace(SKIP_COMMENT_RE, ""), id, tokens)));
+ 		invalidate();
+@@ -707,7 +718,15 @@ function GlobalModeDevPlugin(ctx) {
+ 			ctx.uno.generate([], { preflights: true });
+ 		},
+ 		transform(code, id) {
+-			if (filter(code, id)) tasks.push(extract(code, id));
++			if (filter(code, id)) {
++				if (id.startsWith("\x00") && id.endsWith(".vue.ts")) {
++					// Vize patch
++					const stripped = id.slice(1, -3);
++					tasks.push(extract(fs.readFileSync(stripped, "utf-8"), stripped));
++				} else {
++					tasks.push(extract(code, id))
++				}
++			};
+ 			return null;
+ 		},
+ 		transformIndexHtml: {
