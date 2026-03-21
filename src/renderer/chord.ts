@@ -77,6 +77,7 @@ const nonDiatonicSusLength = dotRadius * 2;
 const omitCircleRadius = dotRadius * 2;
 const fifthShiftLength = dotRadius * 1;
 const tensionRadius = dotRadius;
+const slashBassSize = dotRadius * 4;
 export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const positionLeft = new Fraction(chord.position[1], chord.position[2]);
   const positionRight = positionLeft.add(new Fraction(chord.length[0], chord.length[1]));
@@ -84,6 +85,22 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const right = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
   const centerX = lerp(left, right, 0.5);
 
+  const { centerY, shiftY } = drawRoot(canvas, chord, left, right, centerX);
+  drawVariant(canvas, chord, centerX, centerY);
+  drawOmit(canvas, chord, centerX, centerY);
+  drawFifthShift(canvas, chord, centerX, centerY);
+  canvas.translate(0, shiftY);
+  drawTensions(canvas, chord, right);
+  drawSlashBass(canvas, chord, right);
+}
+
+function drawRoot(
+  canvas: CanvasRenderingContext2D,
+  chord: Chord,
+  left: number,
+  right: number,
+  centerX: number,
+): { centerY: number; shiftY: number } {
   let centerY = 0;
   let shiftY = 0;
   switch (chord.root) {
@@ -269,7 +286,15 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
       drawSeventhLikeAttachment(canvas, right - attachmentShift, shiftAmount * 0.9, chord);
       break;
   }
+  return { centerY, shiftY };
+}
 
+function drawVariant(
+  canvas: CanvasRenderingContext2D,
+  chord: Chord,
+  centerX: number,
+  centerY: number,
+) {
   switch (chord.variant) {
     case "diatonic":
       break;
@@ -341,7 +366,14 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
     default:
       throw new ExhaustiveError(chord);
   }
+}
 
+function drawOmit(
+  canvas: CanvasRenderingContext2D,
+  chord: Chord,
+  centerX: number,
+  centerY: number,
+) {
   if (chord.omitThird) {
     canvas.beginPath();
     canvas.arc(centerX, centerY, omitCircleRadius, 0, 2 * Math.PI);
@@ -357,25 +389,33 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
     canvas.arc(centerX, centerY + omitCircleRadius, omitCircleRadius, 0, Math.PI);
     canvas.stroke();
   }
-  if (chord.fifthShift) {
-    canvas.beginPath();
-    if (chord.fifthShift === "sharp") {
-      canvas.moveTo(centerX + fifthShiftLength, centerY - centerAttachmentShift);
-      canvas.lineTo(centerX, centerY - centerAttachmentShift - fifthShiftLength);
-      canvas.lineTo(centerX - fifthShiftLength, centerY - centerAttachmentShift);
-    } else if (
-      chord.fifthShift === "flat" &&
-      // 7th系のm7b5は描画しない
-      !(chord.firstTension === "diatonic" && chord.fifthShift === "flat")
-    ) {
-      canvas.moveTo(centerX - fifthShiftLength, centerY + centerAttachmentShift);
-      canvas.lineTo(centerX, centerY + centerAttachmentShift + fifthShiftLength);
-      canvas.lineTo(centerX + fifthShiftLength, centerY + centerAttachmentShift);
-    }
-    canvas.stroke();
-  }
+}
 
-  canvas.translate(0, shiftY);
+function drawFifthShift(
+  canvas: CanvasRenderingContext2D,
+  chord: Chord,
+  centerX: number,
+  centerY: number,
+) {
+  if (!chord.fifthShift) return;
+  canvas.beginPath();
+  if (chord.fifthShift === "sharp") {
+    canvas.moveTo(centerX + fifthShiftLength, centerY - centerAttachmentShift);
+    canvas.lineTo(centerX, centerY - centerAttachmentShift - fifthShiftLength);
+    canvas.lineTo(centerX - fifthShiftLength, centerY - centerAttachmentShift);
+  } else if (
+    chord.fifthShift === "flat" &&
+    // 7th系のm7b5は描画しない
+    !(chord.firstTension === "diatonic" && chord.fifthShift === "flat")
+  ) {
+    canvas.moveTo(centerX - fifthShiftLength, centerY + centerAttachmentShift);
+    canvas.lineTo(centerX, centerY + centerAttachmentShift + fifthShiftLength);
+    canvas.lineTo(centerX + fifthShiftLength, centerY + centerAttachmentShift);
+  }
+  canvas.stroke();
+}
+
+function drawTensions(canvas: CanvasRenderingContext2D, chord: Chord, right: number) {
   let tensionX = right;
   const tensionY = (tensionRadius / 2) * (chord.tensions.length + 1) + centerAttachmentShift;
   for (let i = chord.tensions.length - 1; i >= 0; i--) {
@@ -427,6 +467,167 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
       }
     }
     tensionX -= tensionRadius * 2;
+  }
+}
+
+function drawSlashBass(canvas: CanvasRenderingContext2D, chord: Chord, right: number) {
+  const baseX = right - slashBassSize * 1.25;
+  const baseY =
+    centerAttachmentShift * 2 + tensionRadius * 2 * chord.tensions.length + slashBassSize / 2;
+  switch (chord.slashBass) {
+    case null:
+      break;
+    case "i":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY + slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY + slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY,
+      );
+      canvas.stroke();
+      break;
+    case "iib":
+      canvas.beginPath();
+      canvas.moveTo(baseX + slashBassSize / 2, baseY - slashBassSize / 2);
+      canvas.lineTo(baseX + slashBassSize / 2, baseY + slashBassSize / 2);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY + slashBassSize / 2,
+        baseX,
+        baseY + slashBassSize / 2,
+        baseX,
+        baseY,
+      );
+      canvas.lineTo(baseX + slashBassSize, baseY);
+      canvas.stroke();
+      break;
+    case "ii":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY - slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY - slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY,
+      );
+      canvas.stroke();
+      canvas.beginPath();
+      canvas.arc(baseX + slashBassSize * (3 / 4), baseY, slashBassSize / 4, 0, Math.PI);
+      canvas.moveTo(baseX + slashBassSize / 2, baseY);
+      canvas.lineTo(baseX + slashBassSize / 2, baseY - slashBassSize / 2);
+      canvas.stroke();
+      break;
+    case "iiib":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY + slashBassSize / 2);
+      canvas.lineTo(baseX, baseY);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY + slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY + slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY,
+      );
+      canvas.stroke();
+      break;
+    case "iii":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY);
+      canvas.lineTo(baseX + slashBassSize, baseY);
+      canvas.stroke();
+      break;
+    case "iv":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY + slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY + slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY,
+      );
+      canvas.stroke();
+      break;
+    case "vb":
+      canvas.beginPath();
+      canvas.moveTo(baseX + slashBassSize / 2, baseY + slashBassSize / 2);
+      canvas.lineTo(baseX + slashBassSize / 2, baseY - slashBassSize / 2);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY - slashBassSize / 2,
+        baseX,
+        baseY - slashBassSize / 2,
+        baseX,
+        baseY,
+      );
+      canvas.lineTo(baseX + slashBassSize, baseY);
+      canvas.stroke();
+      break;
+    case "v":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY + slashBassSize / 2);
+      canvas.lineTo(baseX + slashBassSize, baseY);
+      canvas.stroke();
+      break;
+    case "vib":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY + slashBassSize / 2);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY,
+        baseX + slashBassSize / 2,
+        baseY,
+        baseX + slashBassSize,
+        baseY,
+      );
+      canvas.stroke();
+      break;
+    case "vi":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY + slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY + slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY,
+      );
+      canvas.stroke();
+      canvas.beginPath();
+      canvas.arc(baseX + slashBassSize * (3 / 4), baseY, slashBassSize / 4, Math.PI, 2 * Math.PI);
+      canvas.moveTo(baseX + slashBassSize / 2, baseY);
+      canvas.lineTo(baseX + slashBassSize / 2, baseY + slashBassSize / 2);
+      canvas.stroke();
+      break;
+    case "viib":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY - slashBassSize / 2);
+      canvas.lineTo(baseX, baseY);
+      canvas.bezierCurveTo(
+        baseX,
+        baseY - slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY - slashBassSize / 2,
+        baseX + slashBassSize,
+        baseY,
+      );
+      canvas.stroke();
+      break;
+    case "vii":
+      canvas.beginPath();
+      canvas.moveTo(baseX, baseY - slashBassSize / 2);
+      canvas.lineTo(baseX + slashBassSize, baseY);
+      canvas.stroke();
+      break;
   }
 }
 

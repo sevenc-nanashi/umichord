@@ -39,7 +39,7 @@ function queueRerender() {
           omitFifth: false,
           omitThird: false,
           root: "i",
-          slashBass: null,
+          slashBass: "i",
           variant: "diatonic",
           tensions: [],
         },
@@ -52,7 +52,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "iib",
           tensions: [],
         },
         {
@@ -64,7 +64,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "ii",
           tensions: [],
         },
         {
@@ -76,7 +76,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "iiib",
           tensions: [],
         },
         {
@@ -88,7 +88,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "iii",
           tensions: [],
         },
         {
@@ -100,7 +100,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "iv",
           tensions: [],
         },
         {
@@ -112,7 +112,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "vb",
           tensions: [],
         },
         {
@@ -124,7 +124,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "v",
           tensions: [],
         },
         {
@@ -136,7 +136,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "vib",
           tensions: [],
         },
         {
@@ -148,7 +148,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "vi",
           tensions: [],
         },
         {
@@ -160,7 +160,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "viib",
           tensions: [],
         },
         {
@@ -172,7 +172,7 @@ function queueRerender() {
           fifthShift: null,
           omitFifth: false,
           omitThird: false,
-          slashBass: null,
+          slashBass: "vii",
           tensions: [],
         },
         {
@@ -196,7 +196,7 @@ function queueRerender() {
           fifthShift: null,
           omitThird: false,
           omitFifth: false,
-          slashBass: null,
+          slashBass: "iib",
           tensions: [],
         },
         {
@@ -208,7 +208,7 @@ function queueRerender() {
           fifthShift: "flat",
           omitThird: false,
           omitFifth: false,
-          slashBass: null,
+          slashBass: "i",
           tensions: ["sharp", "natural", "sharp"],
         },
       ],

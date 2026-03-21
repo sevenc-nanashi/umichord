@@ -23,3 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 __agent_only
+
+.claude/settings.local.json
