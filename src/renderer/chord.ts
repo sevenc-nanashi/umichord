@@ -47,8 +47,8 @@ export type Chord =
         11: -1 | 0 | 1 | null;
         13: -1 | 0 | 1 | null;
       };
-      /** b5 **/
-      flat5th: boolean;
+      /** b5/#5 **/
+      fifthShift: "flat" | "sharp" | null;
       /** 分数コード */
       slashBass: Degree | null;
     }
@@ -66,7 +66,7 @@ export type Chord =
         11: null;
         13: null;
       };
-      flat5th: false;
+      fifthShift: null;
       slashBass: null;
     };
 
@@ -82,6 +82,8 @@ const firstTensionLength = dotRadius * 3;
 const attachmentShift = chordDotRadius * 2;
 const susDotRadius = dotRadius * 0.5;
 const nonDiatonicSusLength = dotRadius * 2;
+const omitCircleRadius = dotRadius * 2;
+const fifthShiftLength = dotRadius * 1;
 export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const positionLeft = new Fraction(chord.position[1], chord.position[2]);
   const positionRight = positionLeft.add(new Fraction(chord.length[0], chord.length[1]));
@@ -347,6 +349,39 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
       throw new ExhaustiveError(chord);
   }
 
+  if (chord.omitThird) {
+    canvas.beginPath();
+    canvas.arc(centerX, centerY, omitCircleRadius, 0, 2 * Math.PI);
+    canvas.stroke();
+  }
+  if (chord.omitFifth) {
+    canvas.beginPath();
+    canvas.arc(centerX, centerY - omitCircleRadius, omitCircleRadius, Math.PI, 2 * Math.PI);
+    canvas.moveTo(centerX + omitCircleRadius, centerY - omitCircleRadius);
+    canvas.lineTo(centerX - omitCircleRadius, centerY + omitCircleRadius);
+    canvas.moveTo(centerX - omitCircleRadius, centerY - omitCircleRadius);
+    canvas.lineTo(centerX + omitCircleRadius, centerY + omitCircleRadius);
+    canvas.arc(centerX, centerY + omitCircleRadius, omitCircleRadius, 0, Math.PI);
+    canvas.stroke();
+  }
+  if (chord.fifthShift) {
+    canvas.beginPath();
+    if (chord.fifthShift === "sharp") {
+      canvas.moveTo(centerX + fifthShiftLength, centerY - centerAttachmentShift);
+      canvas.lineTo(centerX, centerY - centerAttachmentShift - fifthShiftLength);
+      canvas.lineTo(centerX - fifthShiftLength, centerY - centerAttachmentShift);
+    } else if (
+      chord.fifthShift === "flat" &&
+      // 7th系のm7b5は描画しない
+      !(chord.firstTension === "diatonic" && chord.fifthShift === "flat")
+    ) {
+      canvas.moveTo(centerX - fifthShiftLength, centerY + centerAttachmentShift);
+      canvas.lineTo(centerX, centerY + centerAttachmentShift + fifthShiftLength);
+      canvas.lineTo(centerX + fifthShiftLength, centerY + centerAttachmentShift);
+    }
+    canvas.stroke();
+  }
+
   canvas.translate(0, shiftY);
 }
 
@@ -478,7 +513,7 @@ function drawSeventhLikeAttachment(
   chord: Chord,
 ) {
   const isDim = chord.variant === "diminished";
-  const isMin7Flat5 = chord.firstTension === "diatonic" && chord.flat5th;
+  const isMin7Flat5 = chord.firstTension === "diatonic" && chord.fifthShift === "flat";
   if (isDim) {
     drawLineLastAttachment(canvas, baseX, baseY, null);
   } else if (isMin7Flat5) {

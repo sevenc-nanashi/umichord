@@ -9,6 +9,8 @@ import {
 } from "./base.ts";
 import { ExhaustiveError } from "../lib/error.ts";
 
+const dotsDistance = dotRadius * 4;
+
 /**
  * minorSection: 白抜きコンマ
  * majorSection: 黒塗りコンマ
@@ -57,7 +59,7 @@ export type Punctuation =
       row: number;
     }
   | {
-      type: "songSmoothChange";
+      type: "gradualSongChange";
       row: number;
     };
 // | {
@@ -80,7 +82,7 @@ export function getRowFromPunctation(p: Punctuation): number {
     case "verseEnd":
     case "songEnd":
     case "songChange":
-    case "songSmoothChange":
+    case "gradualSongChange":
       return p.row;
     case "gradualTempoChange":
       return p.position[0];
@@ -100,8 +102,24 @@ export function renderPunctuation(canvas: CanvasRenderingContext2D, p: Punctuati
     case "minorSection":
       renderMinorSection(canvas, p);
       break;
+    case "verseEnd":
+      renderVerseEnd(canvas, p);
+      break;
+    case "songChange":
+      renderSongChange(canvas, p);
+      break;
+    case "gradualSongChange":
+      renderGradualSongChange(canvas, p);
+      break;
+    case "songEnd":
+      renderSongEnd(canvas, p);
+      break;
+    case "bar":
+      throw new Error("Not implemented: bar punctuation rendering");
+    case "gradualTempoChange":
+      throw new Error("Not implemented: gradual tempo change punctuation rendering");
     default:
-      throw new Error("Not implemented");
+      throw new ExhaustiveError(p);
   }
 }
 
@@ -158,4 +176,54 @@ function renderMinorSection(
   canvas.moveTo(width - paddingLeft + dotRadius * 2, baseLineY);
   canvas.lineTo(width - paddingLeft + dotRadius, baseLineY + dotRadius * 2);
   canvas.stroke();
+}
+function renderVerseEnd(
+  canvas: CanvasRenderingContext2D,
+  _p: Extract<Punctuation, { type: "verseEnd" }>,
+) {
+  canvas.beginPath();
+  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.fill();
+}
+function renderSongChange(
+  canvas: CanvasRenderingContext2D,
+  _p: Extract<Punctuation, { type: "songChange" }>,
+) {
+  canvas.beginPath();
+  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
+  canvas.fill();
+}
+function renderGradualSongChange(
+  canvas: CanvasRenderingContext2D,
+  _p: Extract<Punctuation, { type: "gradualSongChange" }>,
+) {
+  canvas.beginPath();
+  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
+  canvas.fill();
+  canvas.beginPath();
+  canvas.moveTo(width - paddingLeft + dotRadius * 2, baseLineY);
+  canvas.lineTo(width - paddingLeft + dotRadius, baseLineY + dotRadius * 2);
+  canvas.stroke();
+}
+function renderSongEnd(
+  canvas: CanvasRenderingContext2D,
+  _p: Extract<Punctuation, { type: "songEnd" }>,
+) {
+  canvas.beginPath();
+  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.fill();
+  canvas.beginPath();
+  canvas.arc(width - paddingLeft + dotRadius + dotsDistance, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.fill();
+  canvas.beginPath();
+  canvas.arc(
+    width - paddingLeft + dotRadius + dotsDistance / 2,
+    baseLineY - dotsDistance,
+    dotRadius,
+    0,
+    2 * Math.PI,
+  );
+  canvas.fill();
 }
