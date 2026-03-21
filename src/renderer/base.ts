@@ -14,12 +14,12 @@ export type Degree =
   | "viib"
   | "vii";
 
-export const rowHeight = 100;
+export const rowHeight = 150;
 export const width = 400;
 export const gap = 16;
 export const paddingLeft = 80;
 export const paddingRight = 80;
 export const paddingTop = 20;
-export const baseLineY = 80;
+export const baseLineY = 100;
 export const chordsWidth = width - paddingLeft - paddingRight - gap * 2;
-export const dotRadius = (rowHeight / 16) * 0.5;
+export const dotRadius = 3;

@@ -1,15 +1,23 @@
 import {
   baseLineY,
   dotRadius,
+  gap,
   paddingLeft,
+  paddingRight,
+  paddingTop,
   rowHeight,
   width,
   type Length,
   type Position,
 } from "./base.ts";
 import { ExhaustiveError } from "../lib/error.ts";
+import { Fraction, lerp } from "../lib/math.ts";
 
 const dotsDistance = dotRadius * 4;
+const barHeight = dotRadius * 4;
+const barTextSize = dotRadius * 4;
+const gradualTempoChangeTipSize = dotRadius * 4;
+const gradualTempoChangePadding = dotRadius;
 
 /**
  * minorSection: 白抜きコンマ
@@ -31,6 +39,7 @@ export type Punctuation =
       row: number;
       length: Length;
       tempo?: number;
+      timeSignature?: [numerator: number, denominator: number];
     }
   | {
       type: "gradualTempoChange";
@@ -62,16 +71,6 @@ export type Punctuation =
       type: "gradualSongChange";
       row: number;
     };
-// | {
-//     type:
-//       | "minorSection"
-//       | "majorSection"
-//       | "verseEnd"
-//       | "songEnd"
-//       | "songChange"
-//       | "songSmoothChange";
-//     row: number;
-//   };
 
 export function getRowFromPunctation(p: Punctuation): number {
   switch (p.type) {
@@ -115,9 +114,11 @@ export function renderPunctuation(canvas: CanvasRenderingContext2D, p: Punctuati
       renderSongEnd(canvas, p);
       break;
     case "bar":
-      throw new Error("Not implemented: bar punctuation rendering");
+      renderBar(canvas, p);
+      break;
     case "gradualTempoChange":
-      throw new Error("Not implemented: gradual tempo change punctuation rendering");
+      renderGradualTempoChange(canvas, p);
+      break;
     default:
       throw new ExhaustiveError(p);
   }
@@ -226,4 +227,76 @@ function renderSongEnd(
     2 * Math.PI,
   );
   canvas.fill();
+}
+function renderBar(canvas: CanvasRenderingContext2D, p: Extract<Punctuation, { type: "bar" }>) {
+  const positionRight = new Fraction(p.length[0], p.length[1]);
+  const barLeft = paddingLeft + gap;
+  const barRight = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
+  canvas.beginPath();
+  canvas.moveTo(barLeft, paddingTop + barTextSize);
+  canvas.lineTo(barRight, paddingTop + barTextSize);
+  canvas.lineTo(barRight, paddingTop + barTextSize + barHeight);
+  canvas.stroke();
+
+  const text =
+    `${p.tempo} ${p.timeSignature ? `${p.timeSignature[0]}/${p.timeSignature[1]}` : ""}`.trim();
+  if (text) {
+    canvas.font = `${barTextSize}px sans-serif`;
+    canvas.textAlign = "left";
+    canvas.textBaseline = "bottom";
+    canvas.fillText(text, barLeft, paddingTop + barTextSize);
+  }
+}
+function renderGradualTempoChange(
+  canvas: CanvasRenderingContext2D,
+  p: Extract<Punctuation, { type: "gradualTempoChange" }>,
+) {
+  const positionLeft = new Fraction(p.position[1], p.position[2]);
+  const positionRight = positionLeft.add(new Fraction(p.length[0], p.length[1]));
+
+  const barLeft = lerp(paddingLeft + gap, width - paddingRight - gap, positionLeft.toNumber());
+  const barRight = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
+  const barCenter = (barLeft + barRight) / 2;
+
+  canvas.beginPath();
+  canvas.moveTo(barLeft, paddingTop + barTextSize);
+  canvas.lineTo(barRight, paddingTop + barTextSize);
+  canvas.lineTo(
+    barRight - gradualTempoChangeTipSize,
+    paddingTop + barTextSize - gradualTempoChangeTipSize / 2,
+  );
+  canvas.lineTo(
+    barRight - gradualTempoChangeTipSize,
+    paddingTop + barTextSize + gradualTempoChangeTipSize / 2,
+  );
+  canvas.lineTo(barRight, paddingTop + barTextSize);
+  canvas.stroke();
+
+  if (p.direction === "up") {
+    canvas.beginPath();
+    canvas.moveTo(barCenter, paddingTop + barTextSize - gradualTempoChangeTipSize);
+    canvas.lineTo(
+      barCenter - gradualTempoChangeTipSize / 2,
+      paddingTop + barTextSize - gradualTempoChangePadding,
+    );
+    canvas.lineTo(
+      barCenter + gradualTempoChangeTipSize / 2,
+      paddingTop + barTextSize - gradualTempoChangePadding,
+    );
+    canvas.closePath();
+    canvas.fill();
+  } else {
+    canvas.beginPath();
+    canvas.moveTo(barCenter, paddingTop + barTextSize + gradualTempoChangeTipSize);
+    canvas.lineTo(
+      barCenter - gradualTempoChangeTipSize / 2,
+      paddingTop + barTextSize + gradualTempoChangePadding,
+    );
+    canvas.lineTo(
+      barCenter + gradualTempoChangeTipSize / 2,
+      paddingTop + barTextSize + gradualTempoChangePadding,
+    );
+    canvas.closePath();
+    canvas.fill();
+  }
 }

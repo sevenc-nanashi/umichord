@@ -220,12 +220,31 @@ function queueRerender() {
           to: 0,
         },
         {
+          type: "bar",
+          row: 0,
+          length: [2, 4],
+          tempo: 120,
+          timeSignature: [4, 4],
+        },
+        {
           type: "minorSection",
           row: 0,
         },
         {
           type: "majorSection",
           row: 1,
+        },
+        {
+          type: "gradualTempoChange",
+          position: [1, 0, 4],
+          length: [2, 4],
+          direction: "up",
+        },
+        {
+          type: "gradualTempoChange",
+          position: [1, 2, 4],
+          length: [2, 4],
+          direction: "down",
         },
         {
           type: "songChange",
