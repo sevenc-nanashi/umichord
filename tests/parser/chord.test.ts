@@ -57,14 +57,14 @@ describe("parseChordString", () => {
   });
 
   describe("firstTension（ルート直後パターン）", () => {
-    test("1M7: firstTension=flipped（メジャー7th）", () => {
+    test("1M7: firstTension=diatonic（メジャー7th）", () => {
       const c = parseChordString("1M7");
-      expect(c.firstTension).toBe("flipped");
+      expect(c.firstTension).toBe("diatonic");
       expect(c.variant).toBe("diatonic");
     });
-    test("17sus2: firstTension=diatonic（ドミナント7th）", () => {
+    test("17sus2: firstTension=flipped（ドミナント7th）", () => {
       const c = parseChordString("17sus2");
-      expect(c.firstTension).toBe("diatonic");
+      expect(c.firstTension).toBe("flipped");
       expect(c.variant).toBe("sus2");
     });
     test("16: firstTension=6th", () => {
@@ -78,15 +78,15 @@ describe("parseChordString", () => {
   });
 
   describe("firstTension（variant後パターン）", () => {
-    test("1m7: variant=flipped, firstTension=diatonic", () => {
+    test("1m7: variant=flipped, firstTension=flipped", () => {
       const c = parseChordString("1m7");
       expect(c.variant).toBe("flipped");
-      expect(c.firstTension).toBe("diatonic");
+      expect(c.firstTension).toBe("flipped");
     });
-    test("1mM7: variant=flipped, firstTension=flipped", () => {
+    test("1mM7: variant=flipped, firstTension=diatonic", () => {
       const c = parseChordString("1mM7");
       expect(c.variant).toBe("flipped");
-      expect(c.firstTension).toBe("flipped");
+      expect(c.firstTension).toBe("diatonic");
     });
   });
 
@@ -182,13 +182,13 @@ describe("parseChordString", () => {
       const c = parseChordString("1M7");
       expect(c.root).toBe("i");
       expect(c.variant).toBe("diatonic");
-      expect(c.firstTension).toBe("flipped");
+      expect(c.firstTension).toBe("diatonic");
     });
     test("1m7: Im7", () => {
       const c = parseChordString("1m7");
       expect(c.root).toBe("i");
       expect(c.variant).toBe("flipped");
-      expect(c.firstTension).toBe("diatonic");
+      expect(c.firstTension).toBe("flipped");
     });
     test("1sus4: Isus4", () => {
       const c = parseChordString("1sus4");
@@ -199,7 +199,7 @@ describe("parseChordString", () => {
     test("17sus2: I7sus2", () => {
       const c = parseChordString("17sus2");
       expect(c.root).toBe("i");
-      expect(c.firstTension).toBe("diatonic");
+      expect(c.firstTension).toBe("flipped");
       expect(c.variant).toBe("sus2");
     });
     test("1dim7: Idim7", () => {
@@ -211,19 +211,19 @@ describe("parseChordString", () => {
       const c = parseChordString("1aug7");
       expect(c.root).toBe("i");
       expect(c.variant).toBe("augmented");
-      expect(c.firstTension).toBe("diatonic");
+      expect(c.firstTension).toBe("flipped");
     });
     test("1m7b5: Im7(b5)", () => {
       const c = parseChordString("1m7b5");
       expect(c.root).toBe("i");
       expect(c.variant).toBe("flipped");
-      expect(c.firstTension).toBe("diatonic");
+      expect(c.firstTension).toBe("flipped");
       expect(c.fifthShift).toBe("flat");
     });
     test("1M7#5: IMaj7(#5)", () => {
       const c = parseChordString("1M7#5");
       expect(c.root).toBe("i");
-      expect(c.firstTension).toBe("flipped");
+      expect(c.firstTension).toBe("diatonic");
       expect(c.fifthShift).toBe("sharp");
     });
     test("1M7(=): IMaj7(add9)", () => {

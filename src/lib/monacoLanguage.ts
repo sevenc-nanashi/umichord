@@ -118,8 +118,8 @@ export const monarchTokens: Monaco.languages.IMonarchLanguage = {
       [/b6/, "tension1"],
       [/b5/, "fifth"],
       [/#5/, "fifth"],
-      [/7/, "tension1"],
-      [/6/, "tension1"],
+      [/(?<![0-9])7/, "tension1"],
+      [/(?<![0-9])6/, "tension1"],
 
       // バリアント M / m（単独）
       [/M/, "variant"],

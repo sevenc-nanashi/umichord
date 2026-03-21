@@ -7,6 +7,9 @@ export class ParseError extends Error {
   }
 }
 
+const rootsWhoseMinorDiatonic = new Set(["ii", "iii", "vb", "vi", "vii"]);
+const rootsWhoseMinorSeventhDiatonic = new Set(["ii", "vb", "v", "vi"]);
+
 export type ChordData = {
   root: Degree;
   variant:
@@ -97,13 +100,13 @@ export function parseChordString(s: string): ChordData {
   let firstTension: ChordData["firstTension"] = null;
 
   if (s.startsWith("M7", pos)) {
-    firstTension = "flipped";
+    firstTension = rootsWhoseMinorSeventhDiatonic.has(root) ? "flipped" : "diatonic";
     pos += 2;
   } else if (s.startsWith("b6", pos)) {
     firstTension = "b6th";
     pos += 2;
   } else if (s[pos] === "7") {
-    firstTension = "diatonic";
+    firstTension = rootsWhoseMinorSeventhDiatonic.has(root) ? "diatonic" : "flipped";
     pos += 1;
   } else if (s[pos] === "6") {
     firstTension = "6th";
@@ -111,7 +114,7 @@ export function parseChordString(s: string): ChordData {
   }
 
   // variant
-  let variant: ChordData["variant"] = "diatonic";
+  let variant: ChordData["variant"] = rootsWhoseMinorDiatonic.has(root) ? "flipped" : "diatonic";
 
   if (s.startsWith("dim7", pos)) {
     variant = "diminished7";
@@ -139,20 +142,20 @@ export function parseChordString(s: string): ChordData {
     variant = "diatonic";
     pos += 1;
   } else if (s[pos] === "m") {
-    variant = "flipped";
+    variant = rootsWhoseMinorDiatonic.has(root) ? "diatonic" : "flipped";
     pos += 1;
   }
 
   // firstTension（後に来るパターン: root variant firstTension ...）
   if (firstTension === null) {
     if (s.startsWith("M7", pos)) {
-      firstTension = "flipped";
+      firstTension = rootsWhoseMinorSeventhDiatonic.has(root) ? "flipped" : "diatonic";
       pos += 2;
     } else if (s.startsWith("b6", pos)) {
       firstTension = "b6th";
       pos += 2;
     } else if (s[pos] === "7") {
-      firstTension = "diatonic";
+      firstTension = rootsWhoseMinorSeventhDiatonic.has(root) ? "diatonic" : "flipped";
       pos += 1;
     } else if (s[pos] === "6") {
       firstTension = "6th";

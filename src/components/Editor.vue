@@ -67,7 +67,7 @@ const demos = [
 </script>
 
 <template>
-  <div un-h="[calc(100vh_-_4rem)]" un-border="l-1 primary" un-grid>
+  <div un-h="[calc(100vh_-_4rem)]" un-border="l-1 primary" un-grid="~ rows-[auto_auto_1fr]">
     <div un-p="4">TODO: 説明いろいろ</div>
     <div un-p="4" un-border="t-1 primary">
       <h2 un-text="lg">デモ</h2>

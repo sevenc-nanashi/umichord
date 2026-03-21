@@ -260,10 +260,10 @@ describe("parseScore", () => {
       const { chords } = parseScore("1m7 4M7");
       expect(chords[0].root).toBe("i");
       expect(chords[0].variant).toBe("flipped");
-      expect(chords[0].firstTension).toBe("diatonic");
+      expect(chords[0].firstTension).toBe("flipped");
       expect(chords[1].root).toBe("iv");
       expect(chords[1].variant).toBe("diatonic");
-      expect(chords[1].firstTension).toBe("flipped");
+      expect(chords[1].firstTension).toBe("diatonic");
     });
   });
 });

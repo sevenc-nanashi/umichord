@@ -1,3 +1,9 @@
+# 「六時、言の葉の木の下で。」
+# 作詞、作曲：名無し。
+#
+# YouTube： https://youtu.be/TMGSbZamZHw
+# ニコニコ： https://www.nicovideo.jp/watch/sm45977796
+
 !key D
 !bar 1/4 145 4/4
 # Piano Solo
