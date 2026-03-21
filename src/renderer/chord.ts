@@ -25,13 +25,20 @@ export type Chord =
       /** ルート音の位置 */
       root: Degree;
       /** コードの種類 */
-      variant: "diatonic" | "flipped" | "diminished" | "augmented" | "diminished7";
+      variant:
+        | "diatonic"
+        | "flipped"
+        | "diminished"
+        | "augmented"
+        | "diminished7"
+        | "sus2"
+        | "sus4"
+        | "susb2"
+        | "sus#4";
       /** omit3 */
       omitThird: boolean;
       /** omit5 */
       omitFifth: boolean;
-      /** sus */
-      sus: "sus2" | "sus4" | "susb2" | "sus#4" | null;
       /** 7th/6th/b6th */
       firstTension: "diatonic" | "flipped" | "6th" | "b6th" | null;
       /** テンション */
@@ -64,15 +71,17 @@ export type Chord =
     };
 
 const curveControlPointOffset = rowHeight / 8;
-const flipLineLength = dotRadius * 2;
+const flipLineLength = dotRadius * 4;
 const dimAugCircleRadius = dotRadius;
-const dimAugOffset = dimAugCircleRadius + dotRadius;
+const centerAttachmentShift = dimAugCircleRadius + dotRadius;
 const dimAugLineLength = dimAugCircleRadius * 4;
-const shiftAmount = dotRadius * 4;
+const shiftAmount = dotRadius * 8;
 const chordDotRadius = dotRadius;
 const nonDiatonicLoopSize = dotRadius * 2;
 const firstTensionLength = dotRadius * 3;
 const attachmentShift = chordDotRadius * 2;
+const susDotRadius = dotRadius * 0.5;
+const nonDiatonicSusLength = dotRadius * 2;
 export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const positionLeft = new Fraction(chord.position[1], chord.position[2]);
   const positionRight = positionLeft.add(new Fraction(chord.length[0], chord.length[1]));
@@ -207,6 +216,63 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
       drawSeventhLikeAttachment(canvas, right - attachmentShift, 0, chord);
       centerY = -shiftAmount / 2;
       break;
+    case "v":
+      canvas.beginPath();
+      canvas.moveTo(left, 0);
+      canvas.lineTo(right, -shiftAmount);
+      canvas.stroke();
+      drawLineLastAttachment(canvas, right - attachmentShift, -shiftAmount, chord.firstTension);
+      centerY = -shiftAmount / 2;
+      shiftY = -shiftAmount;
+      break;
+    case "vib":
+      canvas.beginPath();
+      canvas.moveTo(left, 0);
+      canvas.bezierCurveTo(left, -shiftAmount, centerX, -shiftAmount, right, -shiftAmount);
+      canvas.stroke();
+      drawLineLastAttachment(canvas, right - attachmentShift, -shiftAmount, chord.firstTension);
+      centerY = -shiftAmount;
+      shiftY = -shiftAmount;
+      break;
+    case "vi":
+      canvas.beginPath();
+      canvas.moveTo(left, 0);
+      canvas.bezierCurveTo(left, curveControlPointOffset, right, curveControlPointOffset, right, 0);
+      canvas.stroke();
+      drawCircleLastAttachment(canvas, right - chordDotRadius, 0, "up", chord.firstTension);
+      centerY = curveControlPointOffset * 0.75;
+      break;
+    case "viib":
+      canvas.beginPath();
+      canvas.moveTo(left, 0);
+      canvas.lineTo(left, shiftAmount);
+      canvas.bezierCurveTo(
+        left,
+        shiftAmount - curveControlPointOffset,
+        right,
+        shiftAmount - curveControlPointOffset,
+        right,
+        shiftAmount,
+      );
+      canvas.stroke();
+      centerY = shiftAmount - curveControlPointOffset * 0.75;
+      shiftY = shiftAmount;
+      drawLineLastAttachment(
+        canvas,
+        right - attachmentShift,
+        shiftAmount - curveControlPointOffset * 0.5,
+        chord.firstTension,
+      );
+      break;
+    case "vii":
+      canvas.beginPath();
+      canvas.moveTo(left, 0);
+      canvas.lineTo(right, shiftAmount);
+      canvas.stroke();
+      centerY = shiftAmount / 2;
+      shiftY = shiftAmount;
+      drawSeventhLikeAttachment(canvas, right - attachmentShift, shiftAmount * 0.9, chord);
+      break;
   }
 
   switch (chord.variant) {
@@ -225,7 +291,7 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
         break;
       }
       canvas.beginPath();
-      canvas.arc(centerX, centerY + dimAugOffset, dimAugCircleRadius, 0, 2 * Math.PI);
+      canvas.arc(centerX, centerY + centerAttachmentShift, dimAugCircleRadius, 0, 2 * Math.PI);
       if (chord.variant === "diminished7") {
         canvas.fill();
       } else {
@@ -233,28 +299,52 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
       }
       canvas.beginPath();
       if (defaultMajor.includes(chord.root)) {
-        canvas.moveTo(centerX - dimAugCircleRadius, centerY + dimAugOffset);
-        canvas.lineTo(centerX, centerY + dimAugOffset - dimAugLineLength);
+        canvas.moveTo(centerX - dimAugCircleRadius, centerY + centerAttachmentShift);
+        canvas.lineTo(centerX, centerY + centerAttachmentShift - dimAugLineLength);
       } else {
-        canvas.moveTo(centerX + dimAugCircleRadius, centerY + dimAugOffset);
-        canvas.lineTo(centerX, centerY + dimAugOffset + dimAugLineLength);
+        canvas.moveTo(centerX + dimAugCircleRadius, centerY + centerAttachmentShift);
+        canvas.lineTo(centerX, centerY + centerAttachmentShift + dimAugLineLength);
       }
       canvas.stroke();
       break;
     case "augmented":
       canvas.beginPath();
-      canvas.arc(centerX, centerY - dimAugOffset, dimAugCircleRadius, 0, 2 * Math.PI);
+      canvas.arc(centerX, centerY - centerAttachmentShift, dimAugCircleRadius, 0, 2 * Math.PI);
       canvas.stroke();
       canvas.beginPath();
       if (defaultMajor.includes(chord.root)) {
-        canvas.moveTo(centerX - dimAugCircleRadius, centerY - dimAugOffset);
-        canvas.lineTo(centerX, centerY - dimAugOffset - dimAugLineLength);
+        canvas.moveTo(centerX - dimAugCircleRadius, centerY - centerAttachmentShift);
+        canvas.lineTo(centerX, centerY - centerAttachmentShift - dimAugLineLength);
       } else {
-        canvas.moveTo(centerX + dimAugCircleRadius, centerY - dimAugOffset);
-        canvas.lineTo(centerX, centerY - dimAugOffset + dimAugLineLength);
+        canvas.moveTo(centerX + dimAugCircleRadius, centerY - centerAttachmentShift);
+        canvas.lineTo(centerX, centerY - centerAttachmentShift + dimAugLineLength);
       }
       canvas.stroke();
       break;
+    case "sus2":
+      canvas.beginPath();
+      canvas.arc(centerX, centerY + centerAttachmentShift, susDotRadius, 0, 2 * Math.PI);
+      canvas.fill();
+      break;
+    case "sus4":
+      canvas.beginPath();
+      canvas.arc(centerX, centerY - centerAttachmentShift, susDotRadius, 0, 2 * Math.PI);
+      canvas.fill();
+      break;
+    case "susb2":
+      canvas.beginPath();
+      canvas.moveTo(centerX, centerY + centerAttachmentShift);
+      canvas.lineTo(centerX, centerY + centerAttachmentShift + nonDiatonicSusLength);
+      canvas.stroke();
+      break;
+    case "sus#4":
+      canvas.beginPath();
+      canvas.moveTo(centerX, centerY - centerAttachmentShift);
+      canvas.lineTo(centerX, centerY - centerAttachmentShift - nonDiatonicSusLength);
+      canvas.stroke();
+      break;
+    default:
+      throw new ExhaustiveError(chord);
   }
 
   canvas.translate(0, shiftY);
@@ -388,7 +478,7 @@ function drawSeventhLikeAttachment(
   chord: Chord,
 ) {
   const isDim = chord.variant === "diminished";
-  const isMin7Flat5 = chord.firstTension === "flipped" && chord.flat5th;
+  const isMin7Flat5 = chord.firstTension === "diatonic" && chord.flat5th;
   if (isDim) {
     drawLineLastAttachment(canvas, baseX, baseY, null);
   } else if (isMin7Flat5) {

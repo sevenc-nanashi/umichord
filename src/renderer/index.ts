@@ -19,8 +19,10 @@ export function render(
     const punctationsInRow = punctations.filter((p) =>
       "row" in p ? p.row === row : p.position[0] === row,
     );
+    canvas.save();
     canvas.translate(0, row * rowHeight);
     renderRow(canvas, chordsInRow, punctationsInRow);
+    canvas.restore();
   }
 }
 
