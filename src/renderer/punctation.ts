@@ -124,34 +124,42 @@ export function renderPunctuation(canvas: CanvasRenderingContext2D, p: Punctuati
   }
 }
 
-const keyLength = (rowHeight / 2) * 0.8;
-const keyTipLength = keyLength * 0.3;
+const keyLength = dotRadius * 10;
+const fromKeyLength = keyLength * 0.6;
+const keyTipLength = dotRadius * 4;
 const keyTipAngle = 20;
-const keyBaseX = paddingLeft / 2;
+const keyBaseX = paddingLeft - keyLength;
 const keyBaseY = rowHeight / 2;
 function renderKey(canvas: CanvasRenderingContext2D, p: Extract<Punctuation, { type: "key" }>) {
-  const toDirection = 30 * p.to - 90;
-  if (p.from === null) {
-    // key change
-    const toX = keyBaseX + keyLength * Math.cos((toDirection * Math.PI) / 180);
-    const toY = keyBaseY + keyLength * Math.sin((toDirection * Math.PI) / 180);
+  if (p.from !== null) {
+    const fromDirection = 30 * p.from - 90;
+    const fromX = keyBaseX + fromKeyLength * Math.cos((fromDirection * Math.PI) / 180);
+    const fromY = keyBaseY + fromKeyLength * Math.sin((fromDirection * Math.PI) / 180);
     canvas.beginPath();
     canvas.moveTo(keyBaseX, keyBaseY);
-    canvas.lineTo(toX, toY);
+    canvas.lineTo(fromX, fromY);
     canvas.stroke();
     canvas.beginPath();
-    const leftTipDirection = toDirection - keyTipAngle;
-    const leftTipX = toX - keyTipLength * Math.cos((leftTipDirection * Math.PI) / 180);
-    const leftTipY = toY - keyTipLength * Math.sin((leftTipDirection * Math.PI) / 180);
-    canvas.moveTo(toX, toY);
-    canvas.lineTo(leftTipX, leftTipY);
-    const rightTipDirection = toDirection + keyTipAngle;
-    const rightTipX = toX - keyTipLength * Math.cos((rightTipDirection * Math.PI) / 180);
-    const rightTipY = toY - keyTipLength * Math.sin((rightTipDirection * Math.PI) / 180);
-    canvas.moveTo(toX, toY);
-    canvas.lineTo(rightTipX, rightTipY);
-    canvas.stroke();
   }
+  const toDirection = 30 * p.to - 90;
+  const toX = keyBaseX + keyLength * Math.cos((toDirection * Math.PI) / 180);
+  const toY = keyBaseY + keyLength * Math.sin((toDirection * Math.PI) / 180);
+  canvas.beginPath();
+  canvas.moveTo(keyBaseX, keyBaseY);
+  canvas.lineTo(toX, toY);
+  canvas.stroke();
+  canvas.beginPath();
+  const leftTipDirection = toDirection - keyTipAngle;
+  const leftTipX = toX - keyTipLength * Math.cos((leftTipDirection * Math.PI) / 180);
+  const leftTipY = toY - keyTipLength * Math.sin((leftTipDirection * Math.PI) / 180);
+  canvas.moveTo(toX, toY);
+  canvas.lineTo(leftTipX, leftTipY);
+  const rightTipDirection = toDirection + keyTipAngle;
+  const rightTipX = toX - keyTipLength * Math.cos((rightTipDirection * Math.PI) / 180);
+  const rightTipY = toY - keyTipLength * Math.sin((rightTipDirection * Math.PI) / 180);
+  canvas.moveTo(toX, toY);
+  canvas.lineTo(rightTipX, rightTipY);
+  canvas.stroke();
 }
 
 function renderMajorSection(

@@ -231,6 +231,12 @@ function queueRerender() {
           row: 0,
         },
         {
+          type: "key",
+          row: 1,
+          from: 1,
+          to: 0,
+        },
+        {
           type: "majorSection",
           row: 1,
         },
