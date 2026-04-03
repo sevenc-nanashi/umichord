@@ -79,6 +79,65 @@ const omitCircleRadius = dotRadius * 2;
 const fifthShiftLength = dotRadius * 1;
 const tensionRadius = dotRadius;
 const slashBassSize = dotRadius * 4;
+
+// P0.x=P1.x=left, P2.x=P3.x=right, P1.y=P2.y=cpY のベジエ曲線上の targetX における Y を返す
+function bezierYAt(
+  left: number,
+  right: number,
+  y0: number,
+  cpY: number,
+  y3: number,
+  targetX: number,
+): number {
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 32; i++) {
+    const mid = (lo + hi) / 2;
+    const t = mid;
+    const x = left * (1 - t) * (1 - t) * (1 + 2 * t) + right * t * t * (3 - 2 * t);
+    if (x < targetX) lo = mid;
+    else hi = mid;
+  }
+  const t = (lo + hi) / 2;
+  return y0 * (1 - t) ** 3 + 3 * cpY * t * (1 - t) + y3 * t ** 3;
+}
+
+// 直線上の targetX における Y を返す（線形補間）
+function lineYAt(x1: number, y1: number, x2: number, y2: number, targetX: number): number {
+  return y1 + ((targetX - x1) / (x2 - x1)) * (y2 - y1);
+}
+
+function drawLineLastAttachmentOnBezier(
+  canvas: CanvasRenderingContext2D,
+  left: number,
+  right: number,
+  y0: number,
+  cpY: number,
+  y3: number,
+  firstTension: null | "diatonic" | "flipped" | "6th" | "b6th",
+) {
+  const baseX = right - attachmentShift;
+  const guideX = Math.max(left, baseX - attachmentShift);
+  const baseY = bezierYAt(left, right, y0, cpY, y3, baseX);
+  const guideY = bezierYAt(left, right, y0, cpY, y3, guideX);
+  drawLineLastAttachment(canvas, baseX, baseY, firstTension, baseX - guideX, baseY - guideY);
+}
+
+function drawLineLastAttachmentOnLine(
+  canvas: CanvasRenderingContext2D,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  firstTension: null | "diatonic" | "flipped" | "6th" | "b6th",
+) {
+  const baseX = x2 - attachmentShift;
+  const guideX = Math.max(x1, baseX - attachmentShift);
+  const baseY = lineYAt(x1, y1, x2, y2, baseX);
+  const guideY = lineYAt(x1, y1, x2, y2, guideX);
+  drawLineLastAttachment(canvas, baseX, baseY, firstTension, baseX - guideX, baseY - guideY);
+}
+
 export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const positionLeft = new Fraction(chord.position[1], chord.position[2]);
   const positionRight = positionLeft.add(new Fraction(chord.length[0], chord.length[1]));
@@ -119,7 +178,15 @@ function drawRoot(
       canvas.bezierCurveTo(left, curveControlPointOffset, right, curveControlPointOffset, right, 0);
       canvas.stroke();
       centerY = curveControlPointOffset * 0.75;
-      drawLineLastAttachment(canvas, right, 0, chord.firstTension);
+      drawLineLastAttachmentOnBezier(
+        canvas,
+        left,
+        right,
+        0,
+        curveControlPointOffset,
+        0,
+        chord.firstTension,
+      );
       break;
     case "iib":
       canvas.beginPath();
@@ -136,7 +203,14 @@ function drawRoot(
       );
       canvas.lineTo(right, shiftAmount);
       canvas.stroke();
-      drawLineLastAttachment(canvas, right - attachmentShift, shiftAmount, chord.firstTension);
+      drawLineLastAttachmentOnLine(
+        canvas,
+        left + nonDiatonicLoopSize,
+        shiftAmount,
+        right,
+        shiftAmount,
+        chord.firstTension,
+      );
       centerY = shiftAmount;
       shiftY = shiftAmount;
       break;
@@ -152,7 +226,13 @@ function drawRoot(
         0,
       );
       canvas.stroke();
-      drawCircleLastAttachment(canvas, right - chordDotRadius, 0, "down", chord.firstTension);
+      drawCircleLastAttachment(
+        canvas,
+        right - chordDotRadius,
+        bezierYAt(left, right, 0, -curveControlPointOffset, 0, right - chordDotRadius),
+        "down",
+        chord.firstTension,
+      );
       // canvas.arc(right - chordDotRadius, 0, chordDotRadius, 0, 2 * Math.PI);
       centerY = -curveControlPointOffset * 0.75;
       break;
@@ -171,10 +251,13 @@ function drawRoot(
       canvas.stroke();
       centerY = -shiftAmount + curveControlPointOffset * 0.75;
       shiftY = -shiftAmount;
-      drawLineLastAttachment(
+      drawLineLastAttachmentOnBezier(
         canvas,
-        right - attachmentShift,
-        -shiftAmount + curveControlPointOffset * 0.5,
+        left,
+        right,
+        -shiftAmount,
+        -shiftAmount + curveControlPointOffset,
+        -shiftAmount,
         chord.firstTension,
       );
       break;
@@ -183,7 +266,7 @@ function drawRoot(
       canvas.moveTo(left, 0);
       canvas.lineTo(right, 0);
       canvas.stroke();
-      drawLineLastAttachment(canvas, right - attachmentShift, 0, chord.firstTension);
+      drawLineLastAttachmentOnLine(canvas, left, 0, right, 0, chord.firstTension);
       centerY = 0;
       break;
     case "iv":
@@ -199,7 +282,15 @@ function drawRoot(
       );
       canvas.stroke();
       centerY = -curveControlPointOffset * 0.75;
-      drawLineLastAttachment(canvas, right, 0, chord.firstTension);
+      drawLineLastAttachmentOnBezier(
+        canvas,
+        left,
+        right,
+        0,
+        -curveControlPointOffset,
+        0,
+        chord.firstTension,
+      );
       break;
     case "vb":
       canvas.beginPath();
@@ -216,7 +307,12 @@ function drawRoot(
       );
       canvas.lineTo(right, 0);
       canvas.stroke();
-      drawSeventhLikeAttachment(canvas, right - attachmentShift, 0, chord);
+      drawSeventhLikeAttachment(
+        canvas,
+        right - attachmentShift,
+        lineYAt(left + nonDiatonicLoopSize, -shiftAmount, right, 0, right - attachmentShift),
+        chord,
+      );
       centerY = -shiftAmount / 2;
       break;
     case "v":
@@ -224,7 +320,7 @@ function drawRoot(
       canvas.moveTo(left, 0);
       canvas.lineTo(right, -shiftAmount);
       canvas.stroke();
-      drawLineLastAttachment(canvas, right - attachmentShift, -shiftAmount, chord.firstTension);
+      drawLineLastAttachmentOnLine(canvas, left, 0, right, -shiftAmount, chord.firstTension);
       centerY = -shiftAmount / 2;
       shiftY = -shiftAmount;
       break;
@@ -233,7 +329,15 @@ function drawRoot(
       canvas.moveTo(left, 0);
       canvas.bezierCurveTo(left, -shiftAmount, centerX, -shiftAmount, right, -shiftAmount);
       canvas.stroke();
-      drawLineLastAttachment(canvas, right - attachmentShift, -shiftAmount, chord.firstTension);
+      drawLineLastAttachmentOnBezier(
+        canvas,
+        left,
+        right,
+        0,
+        -shiftAmount,
+        -shiftAmount,
+        chord.firstTension,
+      );
       centerY = -shiftAmount;
       shiftY = -shiftAmount;
       break;
@@ -242,7 +346,13 @@ function drawRoot(
       canvas.moveTo(left, 0);
       canvas.bezierCurveTo(left, curveControlPointOffset, right, curveControlPointOffset, right, 0);
       canvas.stroke();
-      drawCircleLastAttachment(canvas, right - chordDotRadius, 0, "up", chord.firstTension);
+      drawCircleLastAttachment(
+        canvas,
+        right - chordDotRadius,
+        bezierYAt(left, right, 0, curveControlPointOffset, 0, right - chordDotRadius),
+        "up",
+        chord.firstTension,
+      );
       centerY = curveControlPointOffset * 0.75;
       break;
     case "viib":
@@ -260,10 +370,13 @@ function drawRoot(
       canvas.stroke();
       centerY = shiftAmount - curveControlPointOffset * 0.75;
       shiftY = shiftAmount;
-      drawLineLastAttachment(
+      drawLineLastAttachmentOnBezier(
         canvas,
-        right - attachmentShift,
-        shiftAmount - curveControlPointOffset * 0.5,
+        left,
+        right,
+        shiftAmount,
+        shiftAmount - curveControlPointOffset,
+        shiftAmount,
         chord.firstTension,
       );
       break;
@@ -274,7 +387,12 @@ function drawRoot(
       canvas.stroke();
       centerY = shiftAmount / 2;
       shiftY = shiftAmount;
-      drawSeventhLikeAttachment(canvas, right - attachmentShift, shiftAmount * 0.9, chord);
+      drawSeventhLikeAttachment(
+        canvas,
+        right - attachmentShift,
+        lineYAt(left, 0, right, shiftAmount, right - attachmentShift),
+        chord,
+      );
       break;
   }
   return { centerY, shiftY };
@@ -628,46 +746,98 @@ function drawSlashBass(canvas: CanvasRenderingContext2D, chord: Chord, right: nu
 }
 
 const sixthShift = dotRadius;
+function getAttachmentVector(
+  tangentDx: number,
+  tangentDy: number,
+  verticalDirection: -1 | 1,
+): { dx: number; dy: number } {
+  if (tangentDx === 0 && tangentDy === 0) {
+    return { dx: 0, dy: firstTensionLength * verticalDirection };
+  }
+
+  let dx = -tangentDy;
+  let dy = tangentDx;
+  if (dy !== 0 && Math.sign(dy) !== verticalDirection) {
+    dx *= -1;
+    dy *= -1;
+  }
+
+  const scale = firstTensionLength / Math.hypot(dx, dy);
+  return { dx: dx * scale, dy: dy * scale };
+}
+
+function getLeftNormal(dx: number, dy: number): { x: number; y: number } {
+  const length = Math.hypot(dx, dy);
+  if (length === 0) {
+    return { x: -1, y: 0 };
+  }
+  return { x: -dy / length, y: dx / length };
+}
+
 function drawLineLastAttachment(
   canvas: CanvasRenderingContext2D,
   baseX: number,
   baseY: number,
   firstTension: null | "diatonic" | "flipped" | "6th" | "b6th",
+  tangentDx = 0,
+  tangentDy = 0,
 ) {
   switch (firstTension) {
     case null:
       break;
     case "diatonic":
-      canvas.beginPath();
-      canvas.moveTo(baseX, baseY);
-      canvas.lineTo(baseX, baseY + firstTensionLength);
-      canvas.stroke();
+      {
+        const attachment = getAttachmentVector(tangentDx, tangentDy, 1);
+        canvas.beginPath();
+        canvas.moveTo(baseX, baseY);
+        canvas.lineTo(baseX + attachment.dx, baseY + attachment.dy);
+        canvas.stroke();
+      }
       break;
     case "flipped":
-      canvas.beginPath();
-      canvas.moveTo(baseX, baseY);
-      canvas.lineTo(baseX, baseY - firstTensionLength);
-      canvas.stroke();
+      {
+        const attachment = getAttachmentVector(tangentDx, tangentDy, -1);
+        canvas.beginPath();
+        canvas.moveTo(baseX, baseY);
+        canvas.lineTo(baseX + attachment.dx, baseY + attachment.dy);
+        canvas.stroke();
+      }
       break;
     case "6th":
-      canvas.beginPath();
-      canvas.moveTo(baseX, baseY);
-      canvas.lineTo(baseX, baseY + firstTensionLength);
-      canvas.stroke();
-      canvas.beginPath();
-      canvas.moveTo(baseX - sixthShift, baseY);
-      canvas.lineTo(baseX - sixthShift, baseY + firstTensionLength);
-      canvas.stroke();
+      {
+        const attachment = getAttachmentVector(tangentDx, tangentDy, 1);
+        const leftNormal = getLeftNormal(attachment.dx, attachment.dy);
+        const offsetX = leftNormal.x * sixthShift;
+        const offsetY = leftNormal.y * sixthShift;
+
+        canvas.beginPath();
+        canvas.moveTo(baseX, baseY);
+        canvas.lineTo(baseX + attachment.dx, baseY + attachment.dy);
+        canvas.stroke();
+
+        canvas.beginPath();
+        canvas.moveTo(baseX + offsetX, baseY + offsetY);
+        canvas.lineTo(baseX + offsetX + attachment.dx, baseY + offsetY + attachment.dy);
+        canvas.stroke();
+      }
       break;
     case "b6th":
-      canvas.beginPath();
-      canvas.moveTo(baseX, baseY);
-      canvas.lineTo(baseX, baseY + firstTensionLength);
-      canvas.stroke();
-      canvas.beginPath();
-      canvas.moveTo(baseX + sixthShift, baseY);
-      canvas.lineTo(baseX + sixthShift, baseY + firstTensionLength);
-      canvas.stroke();
+      {
+        const attachment = getAttachmentVector(tangentDx, tangentDy, 1);
+        const leftNormal = getLeftNormal(attachment.dx, attachment.dy);
+        const offsetX = -leftNormal.x * sixthShift;
+        const offsetY = -leftNormal.y * sixthShift;
+
+        canvas.beginPath();
+        canvas.moveTo(baseX, baseY);
+        canvas.lineTo(baseX + attachment.dx, baseY + attachment.dy);
+        canvas.stroke();
+
+        canvas.beginPath();
+        canvas.moveTo(baseX + offsetX, baseY + offsetY);
+        canvas.lineTo(baseX + offsetX + attachment.dx, baseY + offsetY + attachment.dy);
+        canvas.stroke();
+      }
       break;
     default:
       throw new ExhaustiveError(firstTension);
