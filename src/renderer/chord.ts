@@ -79,6 +79,19 @@ const omitCircleRadius = dotRadius * 2;
 const fifthShiftLength = dotRadius * 1;
 const tensionRadius = dotRadius;
 const slashBassSize = dotRadius * 4;
+const decorationGap = dotRadius * 2;
+const decorationClearance = dotRadius * 2;
+
+type RootLayout = {
+  centerY: number;
+  shiftY: number;
+  rightEdgeY: number;
+};
+
+type DecorationLayout = {
+  tensionY: number | null;
+  slashBassY: number | null;
+};
 
 // P0.x=P1.x=left, P2.x=P3.x=right, P1.y=P2.y=cpY のベジエ曲線上の targetX における Y を返す
 function bezierYAt(
@@ -170,13 +183,18 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const right = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
   const centerX = lerp(left, right, 0.5);
 
-  const { centerY, shiftY } = drawRoot(canvas, chord, left, right, centerX);
+  const { centerY, shiftY, rightEdgeY } = drawRoot(canvas, chord, left, right, centerX);
   drawVariant(canvas, chord, centerX, centerY);
   drawOmit(canvas, chord, centerX, centerY);
   drawFifthShift(canvas, chord, centerX, centerY);
   canvas.translate(0, shiftY);
-  drawTensions(canvas, chord, right);
-  drawSlashBass(canvas, chord, right);
+  const decorationLayout = getDecorationLayout(
+    rightEdgeY - shiftY,
+    chord.tensions.length,
+    chord.slashBass !== null,
+  );
+  drawTensions(canvas, chord, right, decorationLayout.tensionY);
+  drawSlashBass(canvas, chord, right, decorationLayout.slashBassY);
 }
 
 function drawRoot(
@@ -185,9 +203,10 @@ function drawRoot(
   left: number,
   right: number,
   centerX: number,
-): { centerY: number; shiftY: number } {
+): RootLayout {
   let centerY = 0;
   let shiftY = 0;
+  let rightEdgeY = 0;
   switch (chord.root) {
     case null:
       for (let x = left; x <= right; x += dotRadius) {
@@ -212,6 +231,7 @@ function drawRoot(
         0,
         chord.firstTension,
       );
+      rightEdgeY = 0;
       break;
     case "iib":
       canvas.beginPath();
@@ -238,6 +258,7 @@ function drawRoot(
       );
       centerY = shiftAmount;
       shiftY = shiftAmount;
+      rightEdgeY = shiftAmount;
       break;
     case "ii":
       canvas.beginPath();
@@ -263,6 +284,7 @@ function drawRoot(
       );
       // canvas.arc(right - chordDotRadius, 0, chordDotRadius, 0, 2 * Math.PI);
       centerY = -curveControlPointOffset * 0.75;
+      rightEdgeY = 0;
       break;
     case "iiib":
       canvas.beginPath();
@@ -288,6 +310,7 @@ function drawRoot(
         -shiftAmount,
         chord.firstTension,
       );
+      rightEdgeY = -shiftAmount;
       break;
     case "iii":
       canvas.beginPath();
@@ -296,6 +319,7 @@ function drawRoot(
       canvas.stroke();
       drawLineLastAttachmentOnLine(canvas, left, 0, right, 0, chord.firstTension);
       centerY = 0;
+      rightEdgeY = 0;
       break;
     case "iv":
       canvas.beginPath();
@@ -319,6 +343,7 @@ function drawRoot(
         0,
         chord.firstTension,
       );
+      rightEdgeY = 0;
       break;
     case "vb":
       canvas.beginPath();
@@ -344,6 +369,7 @@ function drawRoot(
         shiftAmount,
       );
       centerY = -shiftAmount / 2;
+      rightEdgeY = 0;
       break;
     case "v":
       canvas.beginPath();
@@ -353,6 +379,7 @@ function drawRoot(
       drawLineLastAttachmentOnLine(canvas, left, 0, right, -shiftAmount, chord.firstTension);
       centerY = -shiftAmount / 2;
       shiftY = -shiftAmount;
+      rightEdgeY = -shiftAmount;
       break;
     case "vib":
       canvas.beginPath();
@@ -370,6 +397,7 @@ function drawRoot(
       );
       centerY = -shiftAmount;
       shiftY = -shiftAmount;
+      rightEdgeY = -shiftAmount;
       break;
     case "vi":
       canvas.beginPath();
@@ -387,6 +415,7 @@ function drawRoot(
         chord.firstTension,
       );
       centerY = curveControlPointOffset * 0.75;
+      rightEdgeY = 0;
       break;
     case "viib":
       canvas.beginPath();
@@ -412,6 +441,7 @@ function drawRoot(
         shiftAmount,
         chord.firstTension,
       );
+      rightEdgeY = shiftAmount;
       break;
     case "vii":
       canvas.beginPath();
@@ -428,9 +458,43 @@ function drawRoot(
         right - left,
         shiftAmount,
       );
+      rightEdgeY = shiftAmount;
       break;
   }
-  return { centerY, shiftY };
+  return { centerY, shiftY, rightEdgeY };
+}
+
+function getTensionBottomY(tensionY: number, tensionCount: number): number {
+  if (tensionCount <= 0) {
+    return tensionY;
+  }
+  if (tensionCount === 1) {
+    return tensionY + tensionRadius * 2;
+  }
+  return tensionY + (tensionCount * 2 - 1) * tensionRadius;
+}
+
+export function getDecorationLayout(
+  lineY: number,
+  tensionCount: number,
+  hasSlashBass: boolean,
+): DecorationLayout {
+  const decorationTopY = lineY + decorationGap + decorationClearance;
+  let tensionY: number | null = null;
+  let contentBottomY = decorationTopY;
+
+  if (tensionCount > 0) {
+    tensionY = decorationTopY + tensionRadius * 2;
+    contentBottomY = getTensionBottomY(tensionY, tensionCount);
+  }
+
+  let slashBassY: number | null = null;
+  if (hasSlashBass) {
+    const slashBassTopY = tensionCount > 0 ? contentBottomY + decorationGap : decorationTopY;
+    slashBassY = slashBassTopY + slashBassSize / 2;
+  }
+
+  return { tensionY, slashBassY };
 }
 
 function drawVariant(
@@ -564,9 +628,16 @@ function drawFifthShift(
   canvas.stroke();
 }
 
-function drawTensions(canvas: CanvasRenderingContext2D, chord: Chord, right: number) {
+function drawTensions(
+  canvas: CanvasRenderingContext2D,
+  chord: Chord,
+  right: number,
+  tensionY: number | null,
+) {
+  if (tensionY === null) {
+    return;
+  }
   let tensionX = right - tensionRadius;
-  const tensionY = (tensionRadius / 2) * (chord.tensions.length + 1) + centerAttachmentShift;
   for (let i = chord.tensions.length - 1; i >= 0; i--) {
     const tension = chord.tensions[i];
     if (tension === null) {
@@ -619,10 +690,16 @@ function drawTensions(canvas: CanvasRenderingContext2D, chord: Chord, right: num
   }
 }
 
-function drawSlashBass(canvas: CanvasRenderingContext2D, chord: Chord, right: number) {
+function drawSlashBass(
+  canvas: CanvasRenderingContext2D,
+  chord: Chord,
+  right: number,
+  baseY: number | null,
+) {
+  if (baseY === null) {
+    return;
+  }
   const baseX = right - slashBassSize * 1.25;
-  const baseY =
-    centerAttachmentShift * 2 + tensionRadius * 2 * chord.tensions.length + slashBassSize / 2;
   switch (chord.slashBass) {
     case null:
       break;

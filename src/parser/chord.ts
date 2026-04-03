@@ -125,7 +125,7 @@ export function parseChordString(s: string): ChordData {
     pos += 3;
   } else if (s.startsWith("aug8", pos)) {
     variant = "augmentedWithOctave";
-    pos += 3;
+    pos += 4;
   } else if (s.startsWith("aug", pos)) {
     variant = "augmented";
     pos += 3;
