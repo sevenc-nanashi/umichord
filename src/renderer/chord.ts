@@ -420,7 +420,7 @@ function drawTensions(canvas: CanvasRenderingContext2D, chord: Chord, right: num
       continue;
     }
     const tensionTopY = tensionY + (chord.tensions.length - 1 - i) * tensionRadius;
-    const tensionBottomY = tensionTopY + tensionRadius * 2 * (i + 1);
+    const tensionBottomY = tensionTopY + tensionRadius * 2 * i;
     if (i === 0) {
       if (tension === "sharp") {
         canvas.beginPath();
