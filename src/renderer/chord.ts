@@ -138,6 +138,31 @@ function drawLineLastAttachmentOnLine(
   drawLineLastAttachment(canvas, baseX, baseY, firstTension, baseX - guideX, baseY - guideY);
 }
 
+function drawCircleLastAttachmentOnBezier(
+  canvas: CanvasRenderingContext2D,
+  left: number,
+  right: number,
+  y0: number,
+  cpY: number,
+  y3: number,
+  outerDirection: "up" | "down",
+  firstTension: null | "diatonic" | "flipped" | "6th" | "b6th",
+) {
+  const baseX = right - attachmentShift;
+  const guideX = Math.max(left, baseX - attachmentShift);
+  const baseY = bezierYAt(left, right, y0, cpY, y3, baseX);
+  const guideY = bezierYAt(left, right, y0, cpY, y3, guideX);
+  drawCircleLastAttachment(
+    canvas,
+    baseX,
+    baseY,
+    outerDirection,
+    firstTension,
+    baseX - guideX,
+    baseY - guideY,
+  );
+}
+
 export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const positionLeft = new Fraction(chord.position[1], chord.position[2]);
   const positionRight = positionLeft.add(new Fraction(chord.length[0], chord.length[1]));
@@ -226,10 +251,13 @@ function drawRoot(
         0,
       );
       canvas.stroke();
-      drawCircleLastAttachment(
+      drawCircleLastAttachmentOnBezier(
         canvas,
-        right - chordDotRadius,
-        bezierYAt(left, right, 0, -curveControlPointOffset, 0, right - chordDotRadius),
+        left,
+        right,
+        0,
+        -curveControlPointOffset,
+        0,
         "down",
         chord.firstTension,
       );
@@ -312,6 +340,8 @@ function drawRoot(
         right - attachmentShift,
         lineYAt(left + nonDiatonicLoopSize, -shiftAmount, right, 0, right - attachmentShift),
         chord,
+        right - (left + nonDiatonicLoopSize),
+        shiftAmount,
       );
       centerY = -shiftAmount / 2;
       break;
@@ -346,10 +376,13 @@ function drawRoot(
       canvas.moveTo(left, 0);
       canvas.bezierCurveTo(left, curveControlPointOffset, right, curveControlPointOffset, right, 0);
       canvas.stroke();
-      drawCircleLastAttachment(
+      drawCircleLastAttachmentOnBezier(
         canvas,
-        right - chordDotRadius,
-        bezierYAt(left, right, 0, curveControlPointOffset, 0, right - chordDotRadius),
+        left,
+        right,
+        0,
+        curveControlPointOffset,
+        0,
         "up",
         chord.firstTension,
       );
@@ -392,6 +425,8 @@ function drawRoot(
         right - attachmentShift,
         lineYAt(left, 0, right, shiftAmount, right - attachmentShift),
         chord,
+        right - left,
+        shiftAmount,
       );
       break;
   }
@@ -774,6 +809,28 @@ function getLeftNormal(dx: number, dy: number): { x: number; y: number } {
   return { x: -dy / length, y: dx / length };
 }
 
+function getTangentUnit(tangentDx: number, tangentDy: number): { x: number; y: number } {
+  const length = Math.hypot(tangentDx, tangentDy);
+  if (length === 0) {
+    return { x: 1, y: 0 };
+  }
+  return { x: tangentDx / length, y: tangentDy / length };
+}
+
+function getOutwardNormal(
+  tangentDx: number,
+  tangentDy: number,
+  outerDirection: "up" | "down",
+): { x: number; y: number } {
+  const tangent = getTangentUnit(tangentDx, tangentDy);
+  let normal = { x: -tangent.y, y: tangent.x };
+  const expectedSign = outerDirection === "up" ? -1 : 1;
+  if (normal.y !== 0 && Math.sign(normal.y) !== expectedSign) {
+    normal = { x: -normal.x, y: -normal.y };
+  }
+  return normal;
+}
+
 function drawLineLastAttachment(
   canvas: CanvasRenderingContext2D,
   baseX: number,
@@ -850,67 +907,74 @@ function drawCircleLastAttachment(
   baseY: number,
   outerDirection: "up" | "down",
   firstTension: null | "diatonic" | "flipped" | "6th" | "b6th",
+  tangentDx = 0,
+  tangentDy = 0,
 ) {
+  const tangent = getTangentUnit(tangentDx, tangentDy);
+  const outwardNormal = getOutwardNormal(tangentDx, tangentDy, outerDirection);
+  const centerX = baseX + outwardNormal.x * chordDotRadius;
+  const centerY = baseY + outwardNormal.y * chordDotRadius;
+  const outerEdgeX = centerX + outwardNormal.x * chordDotRadius;
+  const outerEdgeY = centerY + outwardNormal.y * chordDotRadius;
+  const tangentOffsetX = -tangent.x * sixthShift;
+  const tangentOffsetY = -tangent.y * sixthShift;
+  const tangentLength = firstTensionLength - chordDotRadius;
+
   switch (firstTension) {
     case null:
       canvas.beginPath();
-      canvas.arc(baseX, baseY, chordDotRadius, 0, 2 * Math.PI);
+      canvas.arc(centerX, centerY, chordDotRadius, 0, 2 * Math.PI);
       canvas.stroke();
       break;
     case "diatonic":
       canvas.beginPath();
-      canvas.arc(baseX, baseY, chordDotRadius, 0, 2 * Math.PI);
+      canvas.arc(centerX, centerY, chordDotRadius, 0, 2 * Math.PI);
       canvas.fill();
       break;
     case "flipped":
       canvas.beginPath();
-      canvas.arc(baseX, baseY, chordDotRadius, 0, 2 * Math.PI);
+      canvas.arc(centerX, centerY, chordDotRadius, 0, 2 * Math.PI);
       canvas.fill();
       canvas.beginPath();
-      canvas.moveTo(baseX, baseY);
+      canvas.moveTo(outerEdgeX, outerEdgeY);
       canvas.lineTo(
-        baseX,
-        outerDirection === "up" ? baseY - firstTensionLength : baseY + firstTensionLength,
+        outerEdgeX + outwardNormal.x * tangentLength,
+        outerEdgeY + outwardNormal.y * tangentLength,
       );
       canvas.stroke();
       break;
     case "6th":
       canvas.beginPath();
-      canvas.arc(baseX, baseY, chordDotRadius, 0, 2 * Math.PI);
-      canvas.stroke();
-      canvas.moveTo(
-        baseX - sixthShift,
-        baseY + (outerDirection === "up" ? -chordDotRadius : chordDotRadius),
-      );
-      canvas.lineTo(
-        baseX - sixthShift,
-        baseY +
-          (outerDirection === "up"
-            ? -(firstTensionLength - chordDotRadius)
-            : firstTensionLength - chordDotRadius),
-      );
+      canvas.arc(centerX, centerY, chordDotRadius, 0, 2 * Math.PI);
       canvas.stroke();
       canvas.beginPath();
-      canvas.moveTo(baseX, baseY + (outerDirection === "up" ? -chordDotRadius : chordDotRadius));
+      canvas.moveTo(outerEdgeX + tangentOffsetX, outerEdgeY + tangentOffsetY);
       canvas.lineTo(
-        baseX,
-        baseY +
-          (outerDirection === "up"
-            ? -(firstTensionLength - chordDotRadius)
-            : firstTensionLength - chordDotRadius),
+        outerEdgeX + tangentOffsetX + outwardNormal.x * tangentLength,
+        outerEdgeY + tangentOffsetY + outwardNormal.y * tangentLength,
+      );
+      canvas.moveTo(outerEdgeX, outerEdgeY);
+      canvas.lineTo(
+        outerEdgeX + outwardNormal.x * tangentLength,
+        outerEdgeY + outwardNormal.y * tangentLength,
       );
       canvas.stroke();
       break;
     case "b6th":
       canvas.beginPath();
-      canvas.arc(baseX, baseY, chordDotRadius, 0, 2 * Math.PI);
-      canvas.stroke();
-      canvas.moveTo(baseX - chordDotRadius, baseY);
-      canvas.lineTo(baseX - (firstTensionLength - chordDotRadius), baseY);
+      canvas.arc(centerX, centerY, chordDotRadius, 0, 2 * Math.PI);
       canvas.stroke();
       canvas.beginPath();
-      canvas.moveTo(baseX + chordDotRadius, baseY);
-      canvas.lineTo(baseX + (firstTensionLength - chordDotRadius), baseY);
+      canvas.moveTo(centerX - tangent.x * chordDotRadius, centerY - tangent.y * chordDotRadius);
+      canvas.lineTo(
+        centerX - tangent.x * firstTensionLength,
+        centerY - tangent.y * firstTensionLength,
+      );
+      canvas.moveTo(centerX + tangent.x * chordDotRadius, centerY + tangent.y * chordDotRadius);
+      canvas.lineTo(
+        centerX + tangent.x * firstTensionLength,
+        centerY + tangent.y * firstTensionLength,
+      );
       canvas.stroke();
       break;
     default:
@@ -923,14 +987,24 @@ function drawSeventhLikeAttachment(
   baseX: number,
   baseY: number,
   chord: Chord,
+  tangentDx = 0,
+  tangentDy = 0,
 ) {
   const isDim = chord.variant === "diminished";
   const isMin7Flat5 = chord.firstTension === "diatonic" && chord.fifthShift === "flat";
   if (isDim) {
-    drawLineLastAttachment(canvas, baseX, baseY, null);
+    drawLineLastAttachment(canvas, baseX, baseY, null, tangentDx, tangentDy);
   } else if (isMin7Flat5) {
-    drawLineLastAttachment(canvas, baseX, baseY, "diatonic");
+    drawLineLastAttachment(canvas, baseX, baseY, "diatonic", tangentDx, tangentDy);
   } else {
-    drawCircleLastAttachment(canvas, baseX, baseY, "down", chord.firstTension);
+    drawCircleLastAttachment(
+      canvas,
+      baseX,
+      baseY,
+      "down",
+      chord.firstTension,
+      tangentDx,
+      tangentDy,
+    );
   }
 }
