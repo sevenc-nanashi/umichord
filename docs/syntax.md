@@ -13,7 +13,7 @@
 
 - `root`；コードのルート。`1`、`1+`、`2-`、`2`など
 - `firstTension`；7th/6th。`7`、`M7`、`6`、`b6`
-- `variant`；コードの種類。`M`、`m`、`dim`、`aug`、`dim7`、`sus2`、`sus4`、`susb2`、`susb4`
+- `variant`；コードの種類。`M`、`m`、`dim`、`aug`、`aug8`、`dim7`、`sus2`、`sus4`、`susb2`、`susb4`
 - `omit`；省略する音。`omit3`、`omit5`、`omit35`
 - `fifth`；5thの変化。`b5`、`#5`
 - `tensions`；テンション。`()`に囲み、9th、11th、13th...の順で列挙します。

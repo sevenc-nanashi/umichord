@@ -110,7 +110,8 @@ export const monarchTokens: Monaco.languages.IMonarchLanguage = {
       // バリアント（長いものから先）
       [/dim7/, "variant"],
       [/dim(?!7)/, "variant"],
-      [/aug/, "variant"],
+      [/aug8/, "variant"],
+      [/aug(?!8)/, "variant"],
       [/sus(?:b2|#4|b4|2|4)/, "variant"],
 
       // firstTension（M7 を先に）

@@ -17,6 +17,7 @@ export type ChordData = {
     | "flipped"
     | "diminished"
     | "augmented"
+    | "augmentedWithOctave"
     | "diminished7"
     | "sus2"
     | "sus4"
@@ -121,6 +122,9 @@ export function parseChordString(s: string): ChordData {
     pos += 4;
   } else if (s.startsWith("dim", pos)) {
     variant = "diminished";
+    pos += 3;
+  } else if (s.startsWith("aug8", pos)) {
+    variant = "augmentedWithOctave";
     pos += 3;
   } else if (s.startsWith("aug", pos)) {
     variant = "augmented";

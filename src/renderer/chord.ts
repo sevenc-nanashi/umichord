@@ -30,6 +30,7 @@ export type Chord =
         | "flipped"
         | "diminished"
         | "augmented"
+        | "augmentedWithOctave"
         | "diminished7"
         | "sus2"
         | "sus4"
@@ -318,9 +319,14 @@ function drawVariant(
       canvas.stroke();
       break;
     case "augmented":
+    case "augmentedWithOctave":
       canvas.beginPath();
       canvas.arc(centerX, centerY - centerAttachmentShift, dimAugCircleRadius, 0, 2 * Math.PI);
-      canvas.stroke();
+      if (chord.variant === "augmentedWithOctave") {
+        canvas.fill();
+      } else {
+        canvas.stroke();
+      }
       canvas.beginPath();
       if (defaultMajor.includes(chord.root)) {
         canvas.moveTo(centerX - dimAugCircleRadius, centerY - centerAttachmentShift);
