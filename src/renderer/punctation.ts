@@ -71,24 +71,6 @@ export type Punctuation =
       row: number;
     };
 
-export function getRowFromPunctation(p: Punctuation): number {
-  switch (p.type) {
-    case "key":
-    case "bar":
-    case "minorSection":
-    case "majorSection":
-    case "verseEnd":
-    case "songEnd":
-    case "songChange":
-    case "gradualSongChange":
-      return p.row;
-    case "gradualTempoChange":
-      return p.position[0];
-    default:
-      throw new ExhaustiveError(p);
-  }
-}
-
 export function renderPunctuation(
   canvas: CanvasRenderingContext2D,
   p: Punctuation,
@@ -142,14 +124,6 @@ const fromKeyLength = keyLength * 0.6;
 const keyTipLength = dotRadius * 4;
 const keyTipAngle = 20;
 const keyBaseX = paddingLeft - keyLength;
-function getKeyBaseY(layout: VerticalLayout) {
-  return layout.chordCenterY;
-}
-
-function getChordEndY(layout: VerticalLayout) {
-  return layout.chordEndY;
-}
-
 function getBarBottomY(layout: VerticalLayout) {
   return layout.chordTopY - barVerticalOffset;
 }
@@ -160,7 +134,7 @@ function getGradualTempoChangeLineY(layout: VerticalLayout) {
 export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): VerticalBounds {
   switch (p.type) {
     case "key": {
-      const keyBaseY = getKeyBaseY(layout);
+      const keyBaseY = layout.chordCenterY;
       const maxLength = p.from === null ? keyLength : Math.max(keyLength, fromKeyLength);
       return {
         minY: keyBaseY - maxLength - keyTipLength,
@@ -171,23 +145,23 @@ export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): Ve
     case "minorSection":
     case "verseEnd":
       return {
-        minY: getChordEndY(layout) - dotRadius,
-        maxY: getChordEndY(layout) + dotRadius * 2,
+        minY: layout.chordEndY - dotRadius,
+        maxY: layout.chordEndY + dotRadius * 2,
       };
     case "songChange":
       return {
-        minY: getChordEndY(layout) - dotsDistance - dotRadius,
-        maxY: getChordEndY(layout) + dotRadius,
+        minY: layout.chordEndY - dotsDistance - dotRadius,
+        maxY: layout.chordEndY + dotRadius,
       };
     case "gradualSongChange":
       return {
-        minY: getChordEndY(layout) - dotsDistance - dotRadius,
-        maxY: getChordEndY(layout) + dotRadius * 2,
+        minY: layout.chordEndY - dotsDistance - dotRadius,
+        maxY: layout.chordEndY + dotRadius * 2,
       };
     case "songEnd":
       return {
-        minY: getChordEndY(layout) - dotsDistance - dotRadius,
-        maxY: getChordEndY(layout) + dotRadius,
+        minY: layout.chordEndY - dotsDistance - dotRadius,
+        maxY: layout.chordEndY + dotRadius,
       };
     case "bar":
       return {
@@ -208,7 +182,7 @@ function renderKey(
   p: Extract<Punctuation, { type: "key" }>,
   layout: RowLayout,
 ) {
-  const keyBaseY = getKeyBaseY(layout);
+  const keyBaseY = layout.chordCenterY;
   if (p.from !== null) {
     const fromDirection = 30 * p.from - 90;
     const fromX = keyBaseX + fromKeyLength * Math.cos((fromDirection * Math.PI) / 180);
@@ -245,7 +219,7 @@ function renderMajorSection(
   _p: Extract<Punctuation, { type: "majorSection" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = getChordEndY(layout);
+  const baseLineY = layout.chordEndY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
@@ -259,7 +233,7 @@ function renderMinorSection(
   _p: Extract<Punctuation, { type: "minorSection" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = getChordEndY(layout);
+  const baseLineY = layout.chordEndY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.stroke();
@@ -273,7 +247,7 @@ function renderVerseEnd(
   _p: Extract<Punctuation, { type: "verseEnd" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = getChordEndY(layout);
+  const baseLineY = layout.chordEndY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
@@ -283,7 +257,7 @@ function renderSongChange(
   _p: Extract<Punctuation, { type: "songChange" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = getChordEndY(layout);
+  const baseLineY = layout.chordEndY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
@@ -294,7 +268,7 @@ function renderGradualSongChange(
   _p: Extract<Punctuation, { type: "gradualSongChange" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = getChordEndY(layout);
+  const baseLineY = layout.chordEndY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
@@ -309,7 +283,7 @@ function renderSongEnd(
   _p: Extract<Punctuation, { type: "songEnd" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = getChordEndY(layout);
+  const baseLineY = layout.chordEndY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();

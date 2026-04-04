@@ -55,20 +55,13 @@ function getPositionedChordBounds(chords: Chord[]): PositionedChordBounds[] {
   return bounds;
 }
 
-function getMaxRow(chords: Chord[], punctations: Punctuation[]) {
-  return Math.max(
-    -1,
-    ...chords.map((chord) => chord.position[0]),
-    ...punctations.map((p) => ("row" in p ? p.row : p.position[0])),
-  );
-}
-
-export function countRows(chords: Chord[], punctations: Punctuation[]) {
-  return getMaxRow(chords, punctations) + 1;
-}
-
 export function computeRowLayouts(chords: Chord[], punctations: Punctuation[]): RowLayout[] {
-  const rowCount = countRows(chords, punctations);
+  const rowCount =
+    Math.max(
+      -1,
+      ...chords.map((chord) => chord.position[0]),
+      ...punctations.map((p) => ("row" in p ? p.row : p.position[0])),
+    ) + 1;
   const layouts: RowLayout[] = [];
   let offsetY = 0;
 
@@ -113,14 +106,6 @@ export function computeRowLayouts(chords: Chord[], punctations: Punctuation[]): 
   return layouts;
 }
 
-export function measureHeight(chords: Chord[], punctations: Punctuation[]) {
-  const layouts = computeRowLayouts(chords, punctations);
-  if (layouts.length === 0) {
-    return rowHeight;
-  }
-  return layouts.reduce((sum, layout) => sum + layout.cropHeight, 0);
-}
-
 export function render(
   canvas: CanvasRenderingContext2D,
   chords: Chord[],
@@ -135,7 +120,20 @@ export function render(
     const punctationsInRow = punctations.filter((p) =>
       "row" in p ? p.row === row : p.position[0] === row,
     );
-    renderRowAt(canvas, chordsInRow, punctationsInRow, layout);
+    canvas.save();
+    canvas.translate(0, layout.offsetY - layout.contentTopY);
+    canvas.save();
+    canvas.translate(0, layout.baselineY);
+    for (const chord of chordsInRow) {
+      renderChord(canvas, chord);
+    }
+    canvas.restore();
+    for (const punctation of punctationsInRow) {
+      canvas.save();
+      renderPunctuation(canvas, punctation, layout);
+      canvas.restore();
+    }
+    canvas.restore();
     renderRowGuideLine(canvas, layout);
   }
 }
@@ -144,7 +142,9 @@ export function renderToSvg(chords: Chord[], punctations: Punctuation[]) {
   if (typeof document === "undefined") {
     throw new Error("renderToSvg requires a browser document");
   }
-  const height = measureHeight(chords, punctations);
+  const layouts = computeRowLayouts(chords, punctations);
+  const height =
+    layouts.length === 0 ? rowHeight : layouts.reduce((sum, layout) => sum + layout.cropHeight, 0);
   const canvas = new Context(width, height) as unknown as CanvasRenderingContext2D & {
     getSerializedSvg(): string;
   };
@@ -222,18 +222,6 @@ function getContentBounds(chords: Chord[], punctations: Punctuation[], layout: R
   };
 }
 
-function renderRowAt(
-  canvas: CanvasRenderingContext2D,
-  chords: Chord[],
-  punctations: Punctuation[],
-  layout: RowLayout,
-) {
-  canvas.save();
-  canvas.translate(0, layout.offsetY - layout.contentTopY);
-  renderRow(canvas, chords, punctations, layout);
-  canvas.restore();
-}
-
 function renderRowGuideLine(canvas: CanvasRenderingContext2D, layout: RowLayout) {
   const guideLineY = layout.offsetY + layout.cropHeight - 0.5;
   canvas.save();
@@ -244,23 +232,4 @@ function renderRowGuideLine(canvas: CanvasRenderingContext2D, layout: RowLayout)
   canvas.lineTo(width, guideLineY);
   canvas.stroke();
   canvas.restore();
-}
-
-function renderRow(
-  canvas: CanvasRenderingContext2D,
-  chords: Chord[],
-  punctations: Punctuation[],
-  layout: RowLayout,
-) {
-  canvas.save();
-  canvas.translate(0, layout.baselineY);
-  for (const chord of chords) {
-    renderChord(canvas, chord);
-  }
-  canvas.restore();
-  for (const punctation of punctations) {
-    canvas.save();
-    renderPunctuation(canvas, punctation, layout);
-    canvas.restore();
-  }
 }

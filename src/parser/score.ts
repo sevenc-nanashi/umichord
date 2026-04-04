@@ -128,10 +128,6 @@ function parseLayoutTokens(s: string): LayoutToken[] {
 // レイアウト → Chord[] 変換
 // ──────────────────────────────────────────────
 
-function totalWeight(tokens: LayoutToken[]): number {
-  return tokens.reduce((sum, t) => sum + t.weight, 0);
-}
-
 function processTokens(
   tokens: LayoutToken[],
   row: number,
@@ -139,7 +135,7 @@ function processTokens(
   end: Fraction,
 ): Chord[] {
   const chords: Chord[] = [];
-  const total = totalWeight(tokens);
+  const total = tokens.reduce((sum, t) => sum + t.weight, 0);
   let cursor = start;
 
   for (const token of tokens) {
