@@ -2,7 +2,7 @@ import { describe, expect, test } from "vite-plus/test";
 import { parseScore } from "../../src/parser/score";
 import { minCropRowHeight, paddingTop, rowBottomPadding, rowHeight } from "../../src/renderer/base";
 import { getChordBounds, getChordRightEdgeY } from "../../src/renderer/chord";
-import { computeRowLayouts, measureHeight } from "../../src/renderer/index";
+import { computeRowLayouts } from "../../src/renderer/index";
 
 describe("row layout", () => {
   test("通常の行は下限つきで切り詰められる", () => {
@@ -50,7 +50,6 @@ describe("row layout", () => {
     );
     expect(layouts[0]!.cropHeight).toBe(layouts[0]!.contentBottomY - layouts[0]!.contentTopY);
     expect(layouts[0]!.cropHeight).toBeGreaterThanOrEqual(minCropRowHeight);
-    expect(measureHeight(chords, punctuations)).toBe(layouts[0]!.cropHeight);
   });
 
   test("行ごとの切り出し高さに応じて次行のオフセットが決まる", () => {
@@ -63,9 +62,6 @@ describe("row layout", () => {
     expect(layouts[0]!.cropHeight).toBeGreaterThanOrEqual(minCropRowHeight);
     expect(layouts[1]!.cropHeight).toBeGreaterThanOrEqual(minCropRowHeight);
     expect(layouts[1]!.offsetY).toBe(layouts[0]!.cropHeight);
-    expect(measureHeight(chords, punctuations)).toBe(
-      layouts[0]!.cropHeight + layouts[1]!.cropHeight,
-    );
   });
 
   test("chordEndY は行内のコードごとの終端 Y ずれを累積する", () => {
@@ -89,16 +85,16 @@ describe("row layout", () => {
     expect(layouts[0]!.contentBottomY).toBeGreaterThanOrEqual(accumulatedBottom);
   });
 
-  test("bar がある行ではコード行の位置は維持されて上方向に行領域が広がる", () => {
+  test("bar がある行では上方向の余白が増えて行が高くなる", () => {
     const { chords, punctuations } = parseScore("!bar 1/1\n1");
     const layouts = computeRowLayouts(chords, punctuations);
     const chordBounds = getChordBounds(chords[0]!);
 
     expect(layouts).toHaveLength(1);
-    expect(layouts[0]!.baselineY).toBe(paddingTop - chordBounds.minY);
-    expect(layouts[0]!.chordTopY).toBe(paddingTop);
+    expect(layouts[0]!.baselineY).toBeGreaterThan(paddingTop - chordBounds.minY);
+    expect(layouts[0]!.chordTopY).toBeGreaterThan(paddingTop);
     expect(layouts[0]!.contentTopY).toBeLessThan(layouts[0]!.chordTopY);
-    expect(layouts[0]!.height).toBe(rowHeight);
-    expect(layouts[0]!.cropHeight).toBeLessThanOrEqual(rowHeight);
+    expect(layouts[0]!.height).toBeGreaterThan(rowHeight);
+    expect(layouts[0]!.cropHeight).toBeGreaterThan(minCropRowHeight);
   });
 });

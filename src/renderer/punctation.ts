@@ -14,6 +14,7 @@ import type { RowLayout } from "./index.ts";
 const dotsDistance = dotRadius * 4;
 const barHeight = dotRadius * 4;
 const barTextSize = dotRadius * 4;
+const barTextTopPadding = dotRadius;
 const gradualTempoChangeTipSize = dotRadius * 4;
 const gradualTempoChangePadding = dotRadius;
 const barVerticalOffset = dotRadius * 2;
@@ -175,7 +176,7 @@ export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): Ve
     }
     case "bar":
       return {
-        minY: getBarBottomY(layout) - (barTextSize + barHeight),
+        minY: getBarBottomY(layout) - (barTextSize + barHeight + barTextTopPadding),
         maxY: getBarBottomY(layout),
       };
     case "gradualTempoChange":
@@ -330,7 +331,7 @@ function renderBar(
   if (text) {
     canvas.font = `${barTextSize}px sans-serif`;
     canvas.textAlign = "left";
-    canvas.textBaseline = "bottom";
+    canvas.textBaseline = "top";
     canvas.fillText(text, barLeft, barBottomY - barHeight);
   }
 }

@@ -31,6 +31,18 @@ type PositionedChordBounds = {
   maxY: number;
 };
 
+function getBarRowTopExpansion(punctations: Punctuation[], layout: RowLayoutBase) {
+  const barPunctuations = punctations.filter((punctation) => punctation.type === "bar");
+  if (barPunctuations.length === 0) {
+    return 0;
+  }
+
+  const minBarY = Math.min(
+    ...barPunctuations.map((punctation) => getPunctuationBounds(punctation, layout).minY),
+  );
+  return Math.max(0, -minBarY);
+}
+
 function getChordsInRenderOrder(chords: Chord[]) {
   return [...chords].sort((left, right) => {
     const leftPosition = left.position[1] / left.position[2];
@@ -83,7 +95,7 @@ export function computeRowLayouts(chords: Chord[], punctations: Punctuation[]): 
       chordEndYOffset += getChordRightEdgeY(chord);
     }
     const chordEndY = baselineY + chordEndYOffset;
-    const layoutBase: RowLayoutBase = {
+    const initialLayoutBase: RowLayoutBase = {
       row,
       offsetY,
       baselineY,
@@ -93,7 +105,22 @@ export function computeRowLayouts(chords: Chord[], punctations: Punctuation[]): 
       chordBottomY,
       chordEndY,
     };
-    const contentBounds = getContentBounds(chordsInRow, punctationsInRow, layoutBase);
+    const barRowTopExpansion = getBarRowTopExpansion(punctationsInRow, initialLayoutBase);
+    const layoutBase: RowLayoutBase = {
+      ...initialLayoutBase,
+      baselineY: initialLayoutBase.baselineY + barRowTopExpansion,
+      height: initialLayoutBase.height + barRowTopExpansion,
+      chordCenterY: initialLayoutBase.chordCenterY + barRowTopExpansion,
+      chordTopY: initialLayoutBase.chordTopY + barRowTopExpansion,
+      chordBottomY: initialLayoutBase.chordBottomY + barRowTopExpansion,
+      chordEndY: initialLayoutBase.chordEndY + barRowTopExpansion,
+    };
+    const contentBounds = getContentBounds(
+      chordsInRow,
+      punctationsInRow,
+      layoutBase,
+      minCropRowHeight + barRowTopExpansion,
+    );
     layouts.push({
       ...layoutBase,
       contentTopY: contentBounds.topY,
@@ -190,11 +217,16 @@ function getActualContentBottomY(
   return Math.min(layout.height, Math.max(chordBottomY, punctuationBottomY));
 }
 
-function getContentBounds(chords: Chord[], punctations: Punctuation[], layout: RowLayoutBase) {
+function getContentBounds(
+  chords: Chord[],
+  punctations: Punctuation[],
+  layout: RowLayoutBase,
+  minHeight: number,
+) {
   const actualTopY = getActualContentTopY(chords, punctations, layout);
   const actualBottomY = getActualContentBottomY(chords, punctations, layout);
   const actualHeight = Math.max(1, actualBottomY - actualTopY);
-  const targetHeight = Math.min(layout.height, Math.max(minCropRowHeight, actualHeight));
+  const targetHeight = Math.min(layout.height, Math.max(minHeight, actualHeight));
 
   if (targetHeight === actualHeight) {
     return {
