@@ -2,14 +2,8 @@
 // - major/minorという書き方より、diatonic / flipped（Iならdiatonicがmaj、flippedがmin）の方が構造的には近いので、diatonic / flippedをベースにする
 
 import { minCropRowHeight, paddingTop, rowBottomPadding, rowHeight, width } from "./base";
-import { getChordBounds, renderChord, type Chord } from "./chord";
-import {
-  getPunctuationBounds,
-  getPunctuationBottomY,
-  getPunctuationChordGap,
-  renderPunctuation,
-  type Punctuation,
-} from "./punctation";
+import { getChordBounds, getChordRightEdgeY, renderChord, type Chord } from "./chord";
+import { getPunctuationBounds, renderPunctuation, type Punctuation } from "./punctation";
 import { Context } from "svgcanvas";
 
 export { width, rowHeight } from "./base.ts";
@@ -22,6 +16,9 @@ export type RowLayout = {
   baselineY: number;
   height: number;
   chordCenterY: number;
+  chordTopY: number;
+  chordBottomY: number;
+  chordEndY: number;
   contentTopY: number;
   contentBottomY: number;
   cropHeight: number;
@@ -54,21 +51,30 @@ export function computeRowLayouts(chords: Chord[], punctations: Punctuation[]): 
     const chordBounds = chordsInRow.map((chord) => getChordBounds(chord));
     const minChordTop = Math.min(0, ...chordBounds.map((bounds) => bounds.minY));
     const maxChordBottom = Math.max(0, ...chordBounds.map((bounds) => bounds.maxY));
-    const punctuationBottom = Math.max(0, ...punctationsInRow.map((p) => getPunctuationBottomY(p)));
-    const punctuationGap = Math.max(0, ...punctationsInRow.map((p) => getPunctuationChordGap(p)));
-    const baselineY = Math.max(
-      paddingTop - minChordTop,
-      punctuationBottom + punctuationGap - minChordTop,
-    );
+    const baselineY = paddingTop - minChordTop;
     const height = Math.max(rowHeight, baselineY + maxChordBottom + rowBottomPadding);
-    const chordCenterY =
-      chordsInRow.length === 0 ? height / 2 : baselineY + (minChordTop + maxChordBottom) / 2;
+    const chordTopY = baselineY + minChordTop;
+    const chordBottomY = baselineY + maxChordBottom;
+    const chordCenterY = chordsInRow.length === 0 ? height / 2 : (chordTopY + chordBottomY) / 2;
+    let chordEndYOffset = 0;
+    const chordsInRenderOrder = [...chordsInRow].sort((left, right) => {
+      const leftPosition = left.position[1] / left.position[2];
+      const rightPosition = right.position[1] / right.position[2];
+      return leftPosition - rightPosition;
+    });
+    for (const chord of chordsInRenderOrder) {
+      chordEndYOffset += getChordRightEdgeY(chord);
+    }
+    const chordEndY = baselineY + chordEndYOffset;
     const layoutBase: RowLayoutBase = {
       row,
       offsetY,
       baselineY,
       height,
       chordCenterY,
+      chordTopY,
+      chordBottomY,
+      chordEndY,
     };
     const contentBounds = getContentBounds(chordsInRow, punctationsInRow, layoutBase);
     layouts.push({
@@ -218,15 +224,15 @@ function renderRow(
   punctations: Punctuation[],
   layout: RowLayout,
 ) {
-  for (const punctation of punctations) {
-    canvas.save();
-    renderPunctuation(canvas, punctation, layout);
-    canvas.restore();
-  }
   canvas.save();
   canvas.translate(0, layout.baselineY);
   for (const chord of chords) {
     renderChord(canvas, chord);
   }
   canvas.restore();
+  for (const punctation of punctations) {
+    canvas.save();
+    renderPunctuation(canvas, punctation, layout);
+    canvas.restore();
+  }
 }

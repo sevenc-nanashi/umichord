@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vite-plus/test";
 import { parseScore } from "../../src/parser/score";
 import { minCropRowHeight, paddingTop, rowBottomPadding, rowHeight } from "../../src/renderer/base";
-import { getChordBounds } from "../../src/renderer/chord";
+import { getChordBounds, getChordRightEdgeY } from "../../src/renderer/chord";
 import { computeRowLayouts, measureHeight } from "../../src/renderer/index";
 
 describe("row layout", () => {
@@ -17,6 +17,9 @@ describe("row layout", () => {
     expect(layouts[0]!.offsetY).toBe(0);
     expect(layouts[0]!.baselineY).toBe(paddingTop);
     expect(layouts[0]!.height).toBe(rowHeight);
+    expect(layouts[0]!.chordTopY).toBe(chordTopY);
+    expect(layouts[0]!.chordBottomY).toBe(chordBottomY);
+    expect(layouts[0]!.chordEndY).toBe(paddingTop + getChordRightEdgeY(chords[0]!));
     expect(layouts[0]!.chordCenterY).toBe(paddingTop + (chordBounds.minY + chordBounds.maxY) / 2);
     expect(layouts[0]!.contentTopY).toBeLessThanOrEqual(chordTopY);
     expect(layouts[0]!.contentBottomY).toBeGreaterThanOrEqual(chordBottomY);
@@ -35,6 +38,9 @@ describe("row layout", () => {
     expect(layouts[0]!.height).toBe(
       Math.max(rowHeight, layouts[0]!.baselineY + chordBottom + rowBottomPadding),
     );
+    expect(layouts[0]!.chordTopY).toBe(layouts[0]!.baselineY + chordBounds.minY);
+    expect(layouts[0]!.chordBottomY).toBe(layouts[0]!.baselineY + chordBounds.maxY);
+    expect(layouts[0]!.chordEndY).toBe(layouts[0]!.baselineY + getChordRightEdgeY(chords[0]));
     expect(layouts[0]!.chordCenterY).toBe(
       layouts[0]!.baselineY + (chordBounds.minY + chordBounds.maxY) / 2,
     );
@@ -62,12 +68,23 @@ describe("row layout", () => {
     );
   });
 
-  test("bar がある行ではコード開始位置が bar の下へ押し下がる", () => {
-    const { chords, punctuations } = parseScore("!bar 1/1\n1");
+  test("chordEndY は行内のコードごとの終端 Y ずれを累積する", () => {
+    const { chords, punctuations } = parseScore("1+ 1+");
     const layouts = computeRowLayouts(chords, punctuations);
 
     expect(layouts).toHaveLength(1);
-    expect(layouts[0]!.baselineY).toBeGreaterThan(paddingTop);
+    expect(layouts[0]!.chordEndY).toBe(paddingTop + getChordRightEdgeY(chords[0]!) * 2);
+  });
+
+  test("bar がある行ではコード行の位置は維持されて上方向に行領域が広がる", () => {
+    const { chords, punctuations } = parseScore("!bar 1/1\n1");
+    const layouts = computeRowLayouts(chords, punctuations);
+    const chordBounds = getChordBounds(chords[0]!);
+
+    expect(layouts).toHaveLength(1);
+    expect(layouts[0]!.baselineY).toBe(paddingTop - chordBounds.minY);
+    expect(layouts[0]!.chordTopY).toBe(paddingTop);
+    expect(layouts[0]!.contentTopY).toBeLessThan(layouts[0]!.chordTopY);
     expect(layouts[0]!.height).toBe(rowHeight);
     expect(layouts[0]!.cropHeight).toBeLessThanOrEqual(rowHeight);
   });

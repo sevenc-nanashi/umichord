@@ -231,6 +231,10 @@ export function getChordBounds(chord: Chord): ChordBounds {
   return bounds;
 }
 
+export function getChordRightEdgeY(chord: Chord) {
+  return getRootMetrics(chord).rightEdgeY;
+}
+
 function expandBounds(target: ChordBounds, extra: ChordBounds): ChordBounds {
   return {
     minY: Math.min(target.minY, extra.minY),

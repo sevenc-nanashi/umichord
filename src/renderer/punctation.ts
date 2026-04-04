@@ -3,7 +3,6 @@ import {
   gap,
   paddingLeft,
   paddingRight,
-  paddingTop,
   width,
   type Length,
   type Position,
@@ -17,7 +16,6 @@ const barHeight = dotRadius * 4;
 const barTextSize = dotRadius * 4;
 const gradualTempoChangeTipSize = dotRadius * 4;
 const gradualTempoChangePadding = dotRadius;
-const punctuationChordGap = dotRadius;
 
 /**
  * minorSection: 白抜きコンマ
@@ -128,30 +126,15 @@ export function renderPunctuation(
   }
 }
 
-export function getPunctuationBottomY(p: Punctuation): number {
-  switch (p.type) {
-    case "bar":
-      return paddingTop + barTextSize + barHeight;
-    case "gradualTempoChange":
-      return paddingTop + barTextSize + gradualTempoChangeTipSize;
-    default:
-      return 0;
-  }
-}
-
-export function getPunctuationChordGap(_p: Punctuation): number {
-  return punctuationChordGap;
-}
-
 export type VerticalBounds = {
   minY: number;
   maxY: number;
 };
 
-type VerticalLayout = Pick<RowLayout, "baselineY" | "height"> & {
-  contentTopY?: number;
-  cropHeight?: number;
-};
+type VerticalLayout = Pick<
+  RowLayout,
+  "baselineY" | "height" | "chordCenterY" | "chordTopY" | "chordBottomY" | "chordEndY"
+>;
 
 const keyLength = dotRadius * 10;
 const fromKeyLength = keyLength * 0.6;
@@ -159,10 +142,19 @@ const keyTipLength = dotRadius * 4;
 const keyTipAngle = 20;
 const keyBaseX = paddingLeft - keyLength;
 function getKeyBaseY(layout: VerticalLayout) {
-  if (layout.contentTopY === undefined || layout.cropHeight === undefined) {
-    return layout.height / 2;
-  }
-  return layout.contentTopY + layout.cropHeight / 2;
+  return layout.chordCenterY;
+}
+
+function getChordEndY(layout: VerticalLayout) {
+  return layout.chordEndY;
+}
+
+function getBarBottomY(layout: VerticalLayout) {
+  return layout.chordTopY;
+}
+
+function getGradualTempoChangeLineY(layout: VerticalLayout) {
+  return getBarBottomY(layout) - gradualTempoChangeTipSize;
 }
 export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): VerticalBounds {
   switch (p.type) {
@@ -178,33 +170,33 @@ export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): Ve
     case "minorSection":
     case "verseEnd":
       return {
-        minY: layout.baselineY - dotRadius,
-        maxY: layout.baselineY + dotRadius * 2,
+        minY: getChordEndY(layout) - dotRadius,
+        maxY: getChordEndY(layout) + dotRadius * 2,
       };
     case "songChange":
       return {
-        minY: layout.baselineY - dotsDistance - dotRadius,
-        maxY: layout.baselineY + dotRadius,
+        minY: getChordEndY(layout) - dotsDistance - dotRadius,
+        maxY: getChordEndY(layout) + dotRadius,
       };
     case "gradualSongChange":
       return {
-        minY: layout.baselineY - dotsDistance - dotRadius,
-        maxY: layout.baselineY + dotRadius * 2,
+        minY: getChordEndY(layout) - dotsDistance - dotRadius,
+        maxY: getChordEndY(layout) + dotRadius * 2,
       };
     case "songEnd":
       return {
-        minY: layout.baselineY - dotsDistance - dotRadius,
-        maxY: layout.baselineY + dotRadius,
+        minY: getChordEndY(layout) - dotsDistance - dotRadius,
+        maxY: getChordEndY(layout) + dotRadius,
       };
     case "bar":
       return {
-        minY: paddingTop,
-        maxY: paddingTop + barTextSize + barHeight,
+        minY: getBarBottomY(layout) - (barTextSize + barHeight),
+        maxY: getBarBottomY(layout),
       };
     case "gradualTempoChange":
       return {
-        minY: paddingTop + barTextSize - gradualTempoChangeTipSize,
-        maxY: paddingTop + barTextSize + gradualTempoChangeTipSize,
+        minY: getGradualTempoChangeLineY(layout) - barTextSize,
+        maxY: getGradualTempoChangeLineY(layout) + gradualTempoChangeTipSize,
       };
     default:
       throw new ExhaustiveError(p);
@@ -252,7 +244,7 @@ function renderMajorSection(
   _p: Extract<Punctuation, { type: "majorSection" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.baselineY;
+  const baseLineY = getChordEndY(layout);
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
@@ -266,7 +258,7 @@ function renderMinorSection(
   _p: Extract<Punctuation, { type: "minorSection" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.baselineY;
+  const baseLineY = getChordEndY(layout);
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.stroke();
@@ -280,7 +272,7 @@ function renderVerseEnd(
   _p: Extract<Punctuation, { type: "verseEnd" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.baselineY;
+  const baseLineY = getChordEndY(layout);
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
@@ -290,7 +282,7 @@ function renderSongChange(
   _p: Extract<Punctuation, { type: "songChange" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.baselineY;
+  const baseLineY = getChordEndY(layout);
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
@@ -301,7 +293,7 @@ function renderGradualSongChange(
   _p: Extract<Punctuation, { type: "gradualSongChange" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.baselineY;
+  const baseLineY = getChordEndY(layout);
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
@@ -316,7 +308,7 @@ function renderSongEnd(
   _p: Extract<Punctuation, { type: "songEnd" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.baselineY;
+  const baseLineY = getChordEndY(layout);
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
@@ -336,15 +328,16 @@ function renderSongEnd(
 function renderBar(
   canvas: CanvasRenderingContext2D,
   p: Extract<Punctuation, { type: "bar" }>,
-  _layout: RowLayout,
+  layout: RowLayout,
 ) {
+  const barBottomY = getBarBottomY(layout);
   const positionRight = new Fraction(p.length[0], p.length[1]);
   const barLeft = paddingLeft + gap;
   const barRight = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
   canvas.beginPath();
-  canvas.moveTo(barLeft, paddingTop + barTextSize);
-  canvas.lineTo(barRight, paddingTop + barTextSize);
-  canvas.lineTo(barRight, paddingTop + barTextSize + barHeight);
+  canvas.moveTo(barLeft, barBottomY - barHeight);
+  canvas.lineTo(barRight, barBottomY - barHeight);
+  canvas.lineTo(barRight, barBottomY);
   canvas.stroke();
 
   const text =
@@ -353,13 +346,13 @@ function renderBar(
     canvas.font = `${barTextSize}px sans-serif`;
     canvas.textAlign = "left";
     canvas.textBaseline = "bottom";
-    canvas.fillText(text, barLeft, paddingTop + barTextSize);
+    canvas.fillText(text, barLeft, barBottomY - barHeight);
   }
 }
 function renderGradualTempoChange(
   canvas: CanvasRenderingContext2D,
   p: Extract<Punctuation, { type: "gradualTempoChange" }>,
-  _layout: RowLayout,
+  layout: RowLayout,
 ) {
   const positionLeft = new Fraction(p.position[1], p.position[2]);
   const positionRight = positionLeft.add(new Fraction(p.length[0], p.length[1]));
@@ -367,45 +360,28 @@ function renderGradualTempoChange(
   const barLeft = lerp(paddingLeft + gap, width - paddingRight - gap, positionLeft.toNumber());
   const barRight = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
   const barCenter = (barLeft + barRight) / 2;
+  const lineY = getGradualTempoChangeLineY(layout);
 
   canvas.beginPath();
-  canvas.moveTo(barLeft, paddingTop + barTextSize);
-  canvas.lineTo(barRight, paddingTop + barTextSize);
-  canvas.lineTo(
-    barRight - gradualTempoChangeTipSize,
-    paddingTop + barTextSize - gradualTempoChangeTipSize / 2,
-  );
-  canvas.lineTo(
-    barRight - gradualTempoChangeTipSize,
-    paddingTop + barTextSize + gradualTempoChangeTipSize / 2,
-  );
-  canvas.lineTo(barRight, paddingTop + barTextSize);
+  canvas.moveTo(barLeft, lineY);
+  canvas.lineTo(barRight, lineY);
+  canvas.lineTo(barRight - gradualTempoChangeTipSize, lineY - gradualTempoChangeTipSize / 2);
+  canvas.lineTo(barRight - gradualTempoChangeTipSize, lineY + gradualTempoChangeTipSize / 2);
+  canvas.lineTo(barRight, lineY);
   canvas.stroke();
 
   if (p.direction === "up") {
     canvas.beginPath();
-    canvas.moveTo(barCenter, paddingTop + barTextSize - gradualTempoChangeTipSize);
-    canvas.lineTo(
-      barCenter - gradualTempoChangeTipSize / 2,
-      paddingTop + barTextSize - gradualTempoChangePadding,
-    );
-    canvas.lineTo(
-      barCenter + gradualTempoChangeTipSize / 2,
-      paddingTop + barTextSize - gradualTempoChangePadding,
-    );
+    canvas.moveTo(barCenter, lineY - gradualTempoChangeTipSize);
+    canvas.lineTo(barCenter - gradualTempoChangeTipSize / 2, lineY - gradualTempoChangePadding);
+    canvas.lineTo(barCenter + gradualTempoChangeTipSize / 2, lineY - gradualTempoChangePadding);
     canvas.closePath();
     canvas.fill();
   } else {
     canvas.beginPath();
-    canvas.moveTo(barCenter, paddingTop + barTextSize + gradualTempoChangeTipSize);
-    canvas.lineTo(
-      barCenter - gradualTempoChangeTipSize / 2,
-      paddingTop + barTextSize + gradualTempoChangePadding,
-    );
-    canvas.lineTo(
-      barCenter + gradualTempoChangeTipSize / 2,
-      paddingTop + barTextSize + gradualTempoChangePadding,
-    );
+    canvas.moveTo(barCenter, lineY + gradualTempoChangeTipSize);
+    canvas.lineTo(barCenter - gradualTempoChangeTipSize / 2, lineY + gradualTempoChangePadding);
+    canvas.lineTo(barCenter + gradualTempoChangeTipSize / 2, lineY + gradualTempoChangePadding);
     canvas.closePath();
     canvas.fill();
   }
