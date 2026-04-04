@@ -22,7 +22,7 @@ const barVerticalOffset = dotRadius * 2;
  * minorSection: 白抜きコンマ
  * majorSection: 黒塗りコンマ
  * verseEnd: ピリオド
- * songEnd: ∴（元の仕様には書いてないが、実際の曲で使われているので追加）
+ * songEnd: ∴
  * songChange: コロン
  * songSmoothChange: セミコロン
  */
@@ -131,6 +131,10 @@ function getBarBottomY(layout: VerticalLayout) {
 function getGradualTempoChangeLineY(layout: VerticalLayout) {
   return getBarBottomY(layout) - gradualTempoChangeTipSize;
 }
+
+function computeSymbolY(layout: Pick<RowLayout, "baselineY" | "chordEndY">) {
+  return lerp(layout.baselineY, layout.chordEndY, 0.25);
+}
 export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): VerticalBounds {
   switch (p.type) {
     case "key": {
@@ -145,24 +149,30 @@ export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): Ve
     case "minorSection":
     case "verseEnd":
       return {
-        minY: layout.chordEndY - dotRadius,
-        maxY: layout.chordEndY + dotRadius * 2,
+        minY: computeSymbolY(layout) - dotRadius,
+        maxY: computeSymbolY(layout) + dotRadius * 2,
       };
-    case "songChange":
+    case "songChange": {
+      const symbolY = computeSymbolY(layout);
       return {
-        minY: layout.chordEndY - dotsDistance - dotRadius,
-        maxY: layout.chordEndY + dotRadius,
+        minY: symbolY - dotsDistance - dotRadius,
+        maxY: symbolY + dotRadius,
       };
-    case "gradualSongChange":
+    }
+    case "gradualSongChange": {
+      const symbolY = computeSymbolY(layout);
       return {
-        minY: layout.chordEndY - dotsDistance - dotRadius,
-        maxY: layout.chordEndY + dotRadius * 2,
+        minY: symbolY - dotsDistance - dotRadius,
+        maxY: symbolY + dotRadius * 2,
       };
-    case "songEnd":
+    }
+    case "songEnd": {
+      const symbolY = computeSymbolY(layout);
       return {
-        minY: layout.chordEndY - dotsDistance - dotRadius,
-        maxY: layout.chordEndY + dotRadius,
+        minY: symbolY - dotsDistance - dotRadius,
+        maxY: symbolY + dotRadius,
       };
+    }
     case "bar":
       return {
         minY: getBarBottomY(layout) - (barTextSize + barHeight),
@@ -219,13 +229,13 @@ function renderMajorSection(
   _p: Extract<Punctuation, { type: "majorSection" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.chordEndY;
+  const y = computeSymbolY(layout);
   canvas.beginPath();
-  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, y, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
   canvas.beginPath();
-  canvas.moveTo(width - paddingLeft + dotRadius * 2, baseLineY);
-  canvas.lineTo(width - paddingLeft + dotRadius, baseLineY + dotRadius * 2);
+  canvas.moveTo(width - paddingLeft + dotRadius * 2, y);
+  canvas.lineTo(width - paddingLeft + dotRadius, y + dotRadius * 2);
   canvas.stroke();
 }
 function renderMinorSection(
@@ -233,13 +243,13 @@ function renderMinorSection(
   _p: Extract<Punctuation, { type: "minorSection" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.chordEndY;
+  const y = computeSymbolY(layout);
   canvas.beginPath();
-  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, y, dotRadius, 0, 2 * Math.PI);
   canvas.stroke();
   canvas.beginPath();
-  canvas.moveTo(width - paddingLeft + dotRadius * 2, baseLineY);
-  canvas.lineTo(width - paddingLeft + dotRadius, baseLineY + dotRadius * 2);
+  canvas.moveTo(width - paddingLeft + dotRadius * 2, y);
+  canvas.lineTo(width - paddingLeft + dotRadius, y + dotRadius * 2);
   canvas.stroke();
 }
 function renderVerseEnd(
@@ -247,9 +257,9 @@ function renderVerseEnd(
   _p: Extract<Punctuation, { type: "verseEnd" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.chordEndY;
+  const y = computeSymbolY(layout);
   canvas.beginPath();
-  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, y, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
 }
 function renderSongChange(
@@ -257,10 +267,10 @@ function renderSongChange(
   _p: Extract<Punctuation, { type: "songChange" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.chordEndY;
+  const y = computeSymbolY(layout);
   canvas.beginPath();
-  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
-  canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, y, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, y - dotsDistance, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
 }
 function renderGradualSongChange(
@@ -268,14 +278,14 @@ function renderGradualSongChange(
   _p: Extract<Punctuation, { type: "gradualSongChange" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.chordEndY;
+  const y = computeSymbolY(layout);
   canvas.beginPath();
-  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
-  canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, y, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, y - dotsDistance, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
   canvas.beginPath();
-  canvas.moveTo(width - paddingLeft + dotRadius * 2, baseLineY);
-  canvas.lineTo(width - paddingLeft + dotRadius, baseLineY + dotRadius * 2);
+  canvas.moveTo(width - paddingLeft + dotRadius * 2, y);
+  canvas.lineTo(width - paddingLeft + dotRadius, y + dotRadius * 2);
   canvas.stroke();
 }
 function renderSongEnd(
@@ -283,17 +293,17 @@ function renderSongEnd(
   _p: Extract<Punctuation, { type: "songEnd" }>,
   layout: RowLayout,
 ) {
-  const baseLineY = layout.chordEndY;
+  const y = computeSymbolY(layout);
   canvas.beginPath();
-  canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius, y, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
   canvas.beginPath();
-  canvas.arc(width - paddingLeft + dotRadius + dotsDistance, baseLineY, dotRadius, 0, 2 * Math.PI);
+  canvas.arc(width - paddingLeft + dotRadius + dotsDistance, y, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
   canvas.beginPath();
   canvas.arc(
     width - paddingLeft + dotRadius + dotsDistance / 2,
-    baseLineY - dotsDistance,
+    y - dotsDistance,
     dotRadius,
     0,
     2 * Math.PI,

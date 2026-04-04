@@ -17,7 +17,7 @@ import Editor from "./components/Editor.vue";
   grid-template-areas:
     "header header"
     "renderer editor";
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
 }
 </style>
