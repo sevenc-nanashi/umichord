@@ -93,6 +93,11 @@ type DecorationLayout = {
   slashBassY: number | null;
 };
 
+export type ChordBounds = {
+  minY: number;
+  maxY: number;
+};
+
 // P0.x=P1.x=left, P2.x=P3.x=right, P1.y=P2.y=cpY のベジエ曲線上の targetX における Y を返す
 function bezierYAt(
   left: number,
@@ -197,6 +202,42 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   drawSlashBass(canvas, chord, right, decorationLayout.slashBassY);
 }
 
+export function getChordBounds(chord: Chord): ChordBounds {
+  const { centerY, shiftY, rightEdgeY, minY, maxY } = getRootMetrics(chord);
+  let bounds: ChordBounds = { minY, maxY };
+
+  bounds = expandBounds(bounds, getVariantBounds(chord, centerY));
+  bounds = expandBounds(bounds, getOmitBounds(chord, centerY));
+  bounds = expandBounds(bounds, getFifthShiftBounds(chord, centerY));
+  bounds = expandBounds(bounds, getFirstTensionBounds(chord, rightEdgeY));
+
+  const decorationLayout = getDecorationLayout(
+    rightEdgeY - shiftY,
+    chord.tensions.length,
+    chord.slashBass !== null,
+  );
+
+  if (decorationLayout.tensionY !== null) {
+    bounds.maxY = Math.max(
+      bounds.maxY,
+      shiftY + getTensionBottomY(decorationLayout.tensionY, chord.tensions.length),
+    );
+  }
+
+  if (decorationLayout.slashBassY !== null) {
+    bounds.maxY = Math.max(bounds.maxY, shiftY + decorationLayout.slashBassY + slashBassSize / 2);
+  }
+
+  return bounds;
+}
+
+function expandBounds(target: ChordBounds, extra: ChordBounds): ChordBounds {
+  return {
+    minY: Math.min(target.minY, extra.minY),
+    maxY: Math.max(target.maxY, extra.maxY),
+  };
+}
+
 function drawRoot(
   canvas: CanvasRenderingContext2D,
   chord: Chord,
@@ -204,9 +245,7 @@ function drawRoot(
   right: number,
   centerX: number,
 ): RootLayout {
-  let centerY = 0;
-  let shiftY = 0;
-  let rightEdgeY = 0;
+  const metrics = getRootMetrics(chord);
   switch (chord.root) {
     case null:
       for (let x = left; x <= right; x += dotRadius) {
@@ -221,7 +260,6 @@ function drawRoot(
       canvas.moveTo(left, 0);
       canvas.bezierCurveTo(left, curveControlPointOffset, right, curveControlPointOffset, right, 0);
       canvas.stroke();
-      centerY = curveControlPointOffset * 0.75;
       drawLineLastAttachmentOnBezier(
         canvas,
         left,
@@ -231,7 +269,6 @@ function drawRoot(
         0,
         chord.firstTension,
       );
-      rightEdgeY = 0;
       break;
     case "iib":
       canvas.beginPath();
@@ -256,9 +293,6 @@ function drawRoot(
         shiftAmount,
         chord.firstTension,
       );
-      centerY = shiftAmount;
-      shiftY = shiftAmount;
-      rightEdgeY = shiftAmount;
       break;
     case "ii":
       canvas.beginPath();
@@ -282,9 +316,6 @@ function drawRoot(
         "down",
         chord.firstTension,
       );
-      // canvas.arc(right - chordDotRadius, 0, chordDotRadius, 0, 2 * Math.PI);
-      centerY = -curveControlPointOffset * 0.75;
-      rightEdgeY = 0;
       break;
     case "iiib":
       canvas.beginPath();
@@ -299,8 +330,6 @@ function drawRoot(
         -shiftAmount,
       );
       canvas.stroke();
-      centerY = -shiftAmount + curveControlPointOffset * 0.75;
-      shiftY = -shiftAmount;
       drawLineLastAttachmentOnBezier(
         canvas,
         left,
@@ -310,7 +339,6 @@ function drawRoot(
         -shiftAmount,
         chord.firstTension,
       );
-      rightEdgeY = -shiftAmount;
       break;
     case "iii":
       canvas.beginPath();
@@ -318,8 +346,6 @@ function drawRoot(
       canvas.lineTo(right, 0);
       canvas.stroke();
       drawLineLastAttachmentOnLine(canvas, left, 0, right, 0, chord.firstTension);
-      centerY = 0;
-      rightEdgeY = 0;
       break;
     case "iv":
       canvas.beginPath();
@@ -333,7 +359,6 @@ function drawRoot(
         0,
       );
       canvas.stroke();
-      centerY = -curveControlPointOffset * 0.75;
       drawLineLastAttachmentOnBezier(
         canvas,
         left,
@@ -343,7 +368,6 @@ function drawRoot(
         0,
         chord.firstTension,
       );
-      rightEdgeY = 0;
       break;
     case "vb":
       canvas.beginPath();
@@ -368,8 +392,6 @@ function drawRoot(
         right - (left + nonDiatonicLoopSize),
         shiftAmount,
       );
-      centerY = -shiftAmount / 2;
-      rightEdgeY = 0;
       break;
     case "v":
       canvas.beginPath();
@@ -377,9 +399,6 @@ function drawRoot(
       canvas.lineTo(right, -shiftAmount);
       canvas.stroke();
       drawLineLastAttachmentOnLine(canvas, left, 0, right, -shiftAmount, chord.firstTension);
-      centerY = -shiftAmount / 2;
-      shiftY = -shiftAmount;
-      rightEdgeY = -shiftAmount;
       break;
     case "vib":
       canvas.beginPath();
@@ -395,9 +414,6 @@ function drawRoot(
         -shiftAmount,
         chord.firstTension,
       );
-      centerY = -shiftAmount;
-      shiftY = -shiftAmount;
-      rightEdgeY = -shiftAmount;
       break;
     case "vi":
       canvas.beginPath();
@@ -414,8 +430,6 @@ function drawRoot(
         "up",
         chord.firstTension,
       );
-      centerY = curveControlPointOffset * 0.75;
-      rightEdgeY = 0;
       break;
     case "viib":
       canvas.beginPath();
@@ -430,8 +444,6 @@ function drawRoot(
         shiftAmount,
       );
       canvas.stroke();
-      centerY = shiftAmount - curveControlPointOffset * 0.75;
-      shiftY = shiftAmount;
       drawLineLastAttachmentOnBezier(
         canvas,
         left,
@@ -441,15 +453,12 @@ function drawRoot(
         shiftAmount,
         chord.firstTension,
       );
-      rightEdgeY = shiftAmount;
       break;
     case "vii":
       canvas.beginPath();
       canvas.moveTo(left, 0);
       canvas.lineTo(right, shiftAmount);
       canvas.stroke();
-      centerY = shiftAmount / 2;
-      shiftY = shiftAmount;
       drawSeventhLikeAttachment(
         canvas,
         right - attachmentShift,
@@ -458,10 +467,87 @@ function drawRoot(
         right - left,
         shiftAmount,
       );
-      rightEdgeY = shiftAmount;
       break;
   }
-  return { centerY, shiftY, rightEdgeY };
+  return metrics;
+}
+
+function getRootMetrics(chord: Chord): RootLayout & ChordBounds {
+  let centerY = 0;
+  let shiftY = 0;
+  let rightEdgeY = 0;
+  let minY = 0;
+  let maxY = 0;
+  switch (chord.root) {
+    case null:
+      break;
+    case "i":
+      centerY = curveControlPointOffset * 0.75;
+      rightEdgeY = 0;
+      maxY = curveControlPointOffset;
+      break;
+    case "iib":
+      centerY = shiftAmount;
+      shiftY = shiftAmount;
+      rightEdgeY = shiftAmount;
+      maxY = shiftAmount + nonDiatonicLoopSize;
+      break;
+    case "ii":
+      centerY = -curveControlPointOffset * 0.75;
+      rightEdgeY = 0;
+      minY = -curveControlPointOffset;
+      break;
+    case "iiib":
+      centerY = -shiftAmount + curveControlPointOffset * 0.75;
+      shiftY = -shiftAmount;
+      rightEdgeY = -shiftAmount;
+      minY = -shiftAmount;
+      break;
+    case "iii":
+      centerY = 0;
+      rightEdgeY = 0;
+      break;
+    case "iv":
+      centerY = -curveControlPointOffset * 0.75;
+      rightEdgeY = 0;
+      minY = -curveControlPointOffset;
+      break;
+    case "vb":
+      centerY = -shiftAmount / 2;
+      rightEdgeY = 0;
+      minY = -shiftAmount - nonDiatonicLoopSize;
+      break;
+    case "v":
+      centerY = -shiftAmount / 2;
+      shiftY = -shiftAmount;
+      rightEdgeY = -shiftAmount;
+      minY = -shiftAmount;
+      break;
+    case "vib":
+      centerY = -shiftAmount;
+      shiftY = -shiftAmount;
+      rightEdgeY = -shiftAmount;
+      minY = -shiftAmount;
+      break;
+    case "vi":
+      centerY = curveControlPointOffset * 0.75;
+      rightEdgeY = 0;
+      maxY = curveControlPointOffset;
+      break;
+    case "viib":
+      centerY = shiftAmount - curveControlPointOffset * 0.75;
+      shiftY = shiftAmount;
+      rightEdgeY = shiftAmount;
+      maxY = shiftAmount;
+      break;
+    case "vii":
+      centerY = shiftAmount / 2;
+      shiftY = shiftAmount;
+      rightEdgeY = shiftAmount;
+      maxY = shiftAmount;
+      break;
+  }
+  return { centerY, shiftY, rightEdgeY, minY, maxY };
 }
 
 function getTensionBottomY(tensionY: number, tensionCount: number): number {
@@ -495,6 +581,120 @@ export function getDecorationLayout(
   }
 
   return { tensionY, slashBassY };
+}
+
+function getVariantBounds(chord: Chord, centerY: number): ChordBounds {
+  switch (chord.variant) {
+    case "diatonic":
+      return { minY: centerY, maxY: centerY };
+    case "flipped":
+      return {
+        minY: centerY - flipLineLength / 2,
+        maxY: centerY + flipLineLength / 2,
+      };
+    case "diminished":
+    case "diminished7":
+      if (
+        chord.variant === "diminished" &&
+        chord.root !== null &&
+        seventhLikes.includes(chord.root)
+      ) {
+        return { minY: centerY, maxY: centerY };
+      }
+      return {
+        minY: centerY + centerAttachmentShift - dimAugLineLength,
+        maxY: centerY + centerAttachmentShift + dimAugCircleRadius + dimAugLineLength,
+      };
+    case "augmented":
+    case "augmentedWithOctave":
+      return {
+        minY: centerY - centerAttachmentShift - dimAugCircleRadius - dimAugLineLength,
+        maxY: centerY - centerAttachmentShift + dimAugLineLength,
+      };
+    case "sus2":
+      return {
+        minY: centerY,
+        maxY: centerY + centerAttachmentShift + susDotRadius,
+      };
+    case "sus4":
+      return {
+        minY: centerY - centerAttachmentShift - susDotRadius,
+        maxY: centerY,
+      };
+    case "susb2":
+      return {
+        minY: centerY,
+        maxY: centerY + centerAttachmentShift + nonDiatonicSusLength,
+      };
+    case "sus#4":
+      return {
+        minY: centerY - centerAttachmentShift - nonDiatonicSusLength,
+        maxY: centerY,
+      };
+    default:
+      throw new ExhaustiveError(chord);
+  }
+}
+
+function getOmitBounds(chord: Chord, centerY: number): ChordBounds {
+  let bounds: ChordBounds = { minY: centerY, maxY: centerY };
+  if (chord.omitThird) {
+    bounds = expandBounds(bounds, {
+      minY: centerY - omitCircleRadius,
+      maxY: centerY + omitCircleRadius,
+    });
+  }
+  if (chord.omitFifth) {
+    bounds = expandBounds(bounds, {
+      minY: centerY - omitCircleRadius * 2,
+      maxY: centerY + omitCircleRadius * 2,
+    });
+  }
+  return bounds;
+}
+
+function getFifthShiftBounds(chord: Chord, centerY: number): ChordBounds {
+  if (!chord.fifthShift) {
+    return { minY: centerY, maxY: centerY };
+  }
+  if (
+    chord.fifthShift === "flat" &&
+    !(chord.firstTension === "diatonic" && chord.fifthShift === "flat")
+  ) {
+    return {
+      minY: centerY,
+      maxY: centerY + centerAttachmentShift + fifthShiftLength,
+    };
+  }
+  if (chord.fifthShift === "sharp") {
+    return {
+      minY: centerY - centerAttachmentShift - fifthShiftLength,
+      maxY: centerY,
+    };
+  }
+  return { minY: centerY, maxY: centerY };
+}
+
+function getFirstTensionBounds(chord: Chord, rightEdgeY: number): ChordBounds {
+  const { firstTension } = chord;
+  switch (firstTension) {
+    case null:
+      return { minY: rightEdgeY, maxY: rightEdgeY };
+    case "flipped":
+      return {
+        minY: rightEdgeY - firstTensionLength - chordDotRadius,
+        maxY: rightEdgeY + chordDotRadius,
+      };
+    case "6th":
+    case "b6th":
+    case "diatonic":
+      return {
+        minY: rightEdgeY - chordDotRadius,
+        maxY: rightEdgeY + firstTensionLength + chordDotRadius,
+      };
+    default:
+      throw new ExhaustiveError(firstTension);
+  }
 }
 
 function drawVariant(

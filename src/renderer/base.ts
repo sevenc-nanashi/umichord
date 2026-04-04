@@ -21,5 +21,6 @@ export const paddingLeft = 80;
 export const paddingRight = 80;
 export const paddingTop = 20;
 export const baseLineY = 100;
+export const rowBottomPadding = 12;
 export const chordsWidth = width - paddingLeft - paddingRight - gap * 2;
 export const dotRadius = 3;

@@ -1,23 +1,23 @@
 import {
-  baseLineY,
   dotRadius,
   gap,
   paddingLeft,
   paddingRight,
   paddingTop,
-  rowHeight,
   width,
   type Length,
   type Position,
 } from "./base.ts";
 import { ExhaustiveError } from "../lib/error.ts";
 import { Fraction, lerp } from "../lib/math.ts";
+import type { RowLayout } from "./index.ts";
 
 const dotsDistance = dotRadius * 4;
 const barHeight = dotRadius * 4;
 const barTextSize = dotRadius * 4;
 const gradualTempoChangeTipSize = dotRadius * 4;
 const gradualTempoChangePadding = dotRadius;
+const punctuationChordGap = dotRadius;
 
 /**
  * minorSection: 白抜きコンマ
@@ -90,38 +90,57 @@ export function getRowFromPunctation(p: Punctuation): number {
   }
 }
 
-export function renderPunctuation(canvas: CanvasRenderingContext2D, p: Punctuation) {
+export function renderPunctuation(
+  canvas: CanvasRenderingContext2D,
+  p: Punctuation,
+  layout: RowLayout,
+) {
   switch (p.type) {
     case "key":
-      renderKey(canvas, p);
+      renderKey(canvas, p, layout);
       break;
     case "majorSection":
-      renderMajorSection(canvas, p);
+      renderMajorSection(canvas, p, layout);
       break;
     case "minorSection":
-      renderMinorSection(canvas, p);
+      renderMinorSection(canvas, p, layout);
       break;
     case "verseEnd":
-      renderVerseEnd(canvas, p);
+      renderVerseEnd(canvas, p, layout);
       break;
     case "songChange":
-      renderSongChange(canvas, p);
+      renderSongChange(canvas, p, layout);
       break;
     case "gradualSongChange":
-      renderGradualSongChange(canvas, p);
+      renderGradualSongChange(canvas, p, layout);
       break;
     case "songEnd":
-      renderSongEnd(canvas, p);
+      renderSongEnd(canvas, p, layout);
       break;
     case "bar":
-      renderBar(canvas, p);
+      renderBar(canvas, p, layout);
       break;
     case "gradualTempoChange":
-      renderGradualTempoChange(canvas, p);
+      renderGradualTempoChange(canvas, p, layout);
       break;
     default:
       throw new ExhaustiveError(p);
   }
+}
+
+export function getPunctuationBottomY(p: Punctuation): number {
+  switch (p.type) {
+    case "bar":
+      return paddingTop + barTextSize + barHeight;
+    case "gradualTempoChange":
+      return paddingTop + barTextSize + gradualTempoChangeTipSize;
+    default:
+      return 0;
+  }
+}
+
+export function getPunctuationChordGap(_p: Punctuation): number {
+  return punctuationChordGap;
 }
 
 const keyLength = dotRadius * 10;
@@ -129,8 +148,15 @@ const fromKeyLength = keyLength * 0.6;
 const keyTipLength = dotRadius * 4;
 const keyTipAngle = 20;
 const keyBaseX = paddingLeft - keyLength;
-const keyBaseY = rowHeight / 2;
-function renderKey(canvas: CanvasRenderingContext2D, p: Extract<Punctuation, { type: "key" }>) {
+function getKeyBaseY(layout: RowLayout) {
+  return layout.height / 2;
+}
+function renderKey(
+  canvas: CanvasRenderingContext2D,
+  p: Extract<Punctuation, { type: "key" }>,
+  layout: RowLayout,
+) {
+  const keyBaseY = getKeyBaseY(layout);
   if (p.from !== null) {
     const fromDirection = 30 * p.from - 90;
     const fromX = keyBaseX + fromKeyLength * Math.cos((fromDirection * Math.PI) / 180);
@@ -165,7 +191,9 @@ function renderKey(canvas: CanvasRenderingContext2D, p: Extract<Punctuation, { t
 function renderMajorSection(
   canvas: CanvasRenderingContext2D,
   _p: Extract<Punctuation, { type: "majorSection" }>,
+  layout: RowLayout,
 ) {
+  const baseLineY = layout.baselineY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
@@ -177,7 +205,9 @@ function renderMajorSection(
 function renderMinorSection(
   canvas: CanvasRenderingContext2D,
   _p: Extract<Punctuation, { type: "minorSection" }>,
+  layout: RowLayout,
 ) {
+  const baseLineY = layout.baselineY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.stroke();
@@ -189,7 +219,9 @@ function renderMinorSection(
 function renderVerseEnd(
   canvas: CanvasRenderingContext2D,
   _p: Extract<Punctuation, { type: "verseEnd" }>,
+  layout: RowLayout,
 ) {
+  const baseLineY = layout.baselineY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
@@ -197,7 +229,9 @@ function renderVerseEnd(
 function renderSongChange(
   canvas: CanvasRenderingContext2D,
   _p: Extract<Punctuation, { type: "songChange" }>,
+  layout: RowLayout,
 ) {
+  const baseLineY = layout.baselineY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
@@ -206,7 +240,9 @@ function renderSongChange(
 function renderGradualSongChange(
   canvas: CanvasRenderingContext2D,
   _p: Extract<Punctuation, { type: "gradualSongChange" }>,
+  layout: RowLayout,
 ) {
+  const baseLineY = layout.baselineY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.arc(width - paddingLeft + dotRadius, baseLineY - dotsDistance, dotRadius, 0, 2 * Math.PI);
@@ -219,7 +255,9 @@ function renderGradualSongChange(
 function renderSongEnd(
   canvas: CanvasRenderingContext2D,
   _p: Extract<Punctuation, { type: "songEnd" }>,
+  layout: RowLayout,
 ) {
+  const baseLineY = layout.baselineY;
   canvas.beginPath();
   canvas.arc(width - paddingLeft + dotRadius, baseLineY, dotRadius, 0, 2 * Math.PI);
   canvas.fill();
@@ -236,7 +274,11 @@ function renderSongEnd(
   );
   canvas.fill();
 }
-function renderBar(canvas: CanvasRenderingContext2D, p: Extract<Punctuation, { type: "bar" }>) {
+function renderBar(
+  canvas: CanvasRenderingContext2D,
+  p: Extract<Punctuation, { type: "bar" }>,
+  _layout: RowLayout,
+) {
   const positionRight = new Fraction(p.length[0], p.length[1]);
   const barLeft = paddingLeft + gap;
   const barRight = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
@@ -258,6 +300,7 @@ function renderBar(canvas: CanvasRenderingContext2D, p: Extract<Punctuation, { t
 function renderGradualTempoChange(
   canvas: CanvasRenderingContext2D,
   p: Extract<Punctuation, { type: "gradualTempoChange" }>,
+  _layout: RowLayout,
 ) {
   const positionLeft = new Fraction(p.position[1], p.position[2]);
   const positionRight = positionLeft.add(new Fraction(p.length[0], p.length[1]));

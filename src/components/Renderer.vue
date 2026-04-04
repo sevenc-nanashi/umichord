@@ -15,7 +15,7 @@ function queueRerender() {
   queueRerenderId = requestAnimationFrame(() => {
     if (!canvasContext) return;
     console.log("Rendering...");
-    canvasContext.canvas.height = renderer.rowHeight * rows.value;
+    canvasContext.canvas.height = canvasHeight.value;
     canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height);
     const { chords, punctuations } = parsedScore.value;
     if (chords.length > 0 || punctuations.length > 0) {
@@ -29,9 +29,9 @@ function queueRerender() {
   });
 }
 
-const rows = computed(() => {
+const canvasHeight = computed(() => {
   const { chords, punctuations } = parsedScore.value;
-  return renderer.countRows(chords, punctuations);
+  return renderer.measureHeight(chords, punctuations);
 });
 onMounted(() => {
   if (!mainCanvas.value) return;
@@ -54,7 +54,7 @@ watch(parsedScore, () => queueRerender(), {
     <canvas
       ref="mainCanvas"
       :width="renderer.width"
-      :height="renderer.rowHeight * rows"
+      :height="canvasHeight"
       un-w="full"
       un-bg="white"
       un-border="1 primary"
