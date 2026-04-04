@@ -15,6 +15,7 @@ export type Degree =
   | "vii";
 
 export const rowHeight = 150;
+export const minCropRowHeight = 72;
 export const width = 400;
 export const gap = 16;
 export const paddingLeft = 80;

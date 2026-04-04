@@ -1,21 +1,27 @@
 import { describe, expect, test } from "vite-plus/test";
 import { parseScore } from "../../src/parser/score";
-import { paddingTop, rowBottomPadding, rowHeight } from "../../src/renderer/base";
+import { minCropRowHeight, paddingTop, rowBottomPadding, rowHeight } from "../../src/renderer/base";
 import { getChordBounds } from "../../src/renderer/chord";
 import { computeRowLayouts, measureHeight } from "../../src/renderer/index";
 
 describe("row layout", () => {
-  test("通常の行は最小高さのまま", () => {
+  test("通常の行は下限つきで切り詰められる", () => {
     const { chords, punctuations } = parseScore("1");
     const layouts = computeRowLayouts(chords, punctuations);
+    const chordBounds = getChordBounds(chords[0]!);
+    const chordTopY = paddingTop + chordBounds.minY;
+    const chordBottomY = paddingTop + chordBounds.maxY;
 
     expect(layouts).toHaveLength(1);
-    expect(layouts[0]).toMatchObject({
-      row: 0,
-      offsetY: 0,
-      baselineY: paddingTop,
-      height: rowHeight,
-    });
+    expect(layouts[0]!.row).toBe(0);
+    expect(layouts[0]!.offsetY).toBe(0);
+    expect(layouts[0]!.baselineY).toBe(paddingTop);
+    expect(layouts[0]!.height).toBe(rowHeight);
+    expect(layouts[0]!.chordCenterY).toBe(paddingTop + (chordBounds.minY + chordBounds.maxY) / 2);
+    expect(layouts[0]!.contentTopY).toBeLessThanOrEqual(chordTopY);
+    expect(layouts[0]!.contentBottomY).toBeGreaterThanOrEqual(chordBottomY);
+    expect(layouts[0]!.cropHeight).toBe(minCropRowHeight);
+    expect(layouts[0]!.cropHeight).toBeLessThan(rowHeight);
   });
 
   test("テンションと分数コードが多い行でも必要最小限の高さに収まる", () => {
@@ -29,17 +35,31 @@ describe("row layout", () => {
     expect(layouts[0]!.height).toBe(
       Math.max(rowHeight, layouts[0]!.baselineY + chordBottom + rowBottomPadding),
     );
-    expect(measureHeight(chords, punctuations)).toBe(layouts[0]!.height);
+    expect(layouts[0]!.chordCenterY).toBe(
+      layouts[0]!.baselineY + (chordBounds.minY + chordBounds.maxY) / 2,
+    );
+    expect(layouts[0]!.contentTopY).toBeLessThanOrEqual(layouts[0]!.baselineY + chordBounds.minY);
+    expect(layouts[0]!.contentBottomY).toBeGreaterThanOrEqual(
+      layouts[0]!.baselineY + chordBounds.maxY,
+    );
+    expect(layouts[0]!.cropHeight).toBe(layouts[0]!.contentBottomY - layouts[0]!.contentTopY);
+    expect(layouts[0]!.cropHeight).toBeGreaterThanOrEqual(minCropRowHeight);
+    expect(measureHeight(chords, punctuations)).toBe(layouts[0]!.cropHeight);
   });
 
-  test("行ごとの高さに応じて次行のオフセットが決まる", () => {
+  test("行ごとの切り出し高さに応じて次行のオフセットが決まる", () => {
     const { chords, punctuations } = parseScore("1(+_+)/5\n1");
     const layouts = computeRowLayouts(chords, punctuations);
 
     expect(layouts).toHaveLength(2);
-    expect(layouts[0]!.height).toBeGreaterThanOrEqual(rowHeight);
-    expect(layouts[1]!.offsetY).toBe(layouts[0]!.height);
-    expect(measureHeight(chords, punctuations)).toBe(layouts[0]!.height + layouts[1]!.height);
+    expect(layouts[0]!.cropHeight).toBe(layouts[0]!.contentBottomY - layouts[0]!.contentTopY);
+    expect(layouts[1]!.cropHeight).toBe(layouts[1]!.contentBottomY - layouts[1]!.contentTopY);
+    expect(layouts[0]!.cropHeight).toBeGreaterThanOrEqual(minCropRowHeight);
+    expect(layouts[1]!.cropHeight).toBeGreaterThanOrEqual(minCropRowHeight);
+    expect(layouts[1]!.offsetY).toBe(layouts[0]!.cropHeight);
+    expect(measureHeight(chords, punctuations)).toBe(
+      layouts[0]!.cropHeight + layouts[1]!.cropHeight,
+    );
   });
 
   test("bar がある行ではコード開始位置が bar の下へ押し下がる", () => {
@@ -49,5 +69,6 @@ describe("row layout", () => {
     expect(layouts).toHaveLength(1);
     expect(layouts[0]!.baselineY).toBeGreaterThan(paddingTop);
     expect(layouts[0]!.height).toBe(rowHeight);
+    expect(layouts[0]!.cropHeight).toBeLessThanOrEqual(rowHeight);
   });
 });

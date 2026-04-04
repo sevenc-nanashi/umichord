@@ -143,13 +143,66 @@ export function getPunctuationChordGap(_p: Punctuation): number {
   return punctuationChordGap;
 }
 
+export type VerticalBounds = {
+  minY: number;
+  maxY: number;
+};
+
+type VerticalLayout = Pick<RowLayout, "baselineY" | "height" | "chordCenterY">;
+
 const keyLength = dotRadius * 10;
 const fromKeyLength = keyLength * 0.6;
 const keyTipLength = dotRadius * 4;
 const keyTipAngle = 20;
 const keyBaseX = paddingLeft - keyLength;
-function getKeyBaseY(layout: RowLayout) {
-  return layout.height / 2;
+function getKeyBaseY(layout: VerticalLayout) {
+  return layout.chordCenterY;
+}
+export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): VerticalBounds {
+  switch (p.type) {
+    case "key": {
+      const keyBaseY = getKeyBaseY(layout);
+      const maxLength = p.from === null ? keyLength : Math.max(keyLength, fromKeyLength);
+      return {
+        minY: keyBaseY - maxLength - keyTipLength,
+        maxY: keyBaseY + maxLength + keyTipLength,
+      };
+    }
+    case "majorSection":
+    case "minorSection":
+    case "verseEnd":
+      return {
+        minY: layout.baselineY - dotRadius,
+        maxY: layout.baselineY + dotRadius * 2,
+      };
+    case "songChange":
+      return {
+        minY: layout.baselineY - dotsDistance - dotRadius,
+        maxY: layout.baselineY + dotRadius,
+      };
+    case "gradualSongChange":
+      return {
+        minY: layout.baselineY - dotsDistance - dotRadius,
+        maxY: layout.baselineY + dotRadius * 2,
+      };
+    case "songEnd":
+      return {
+        minY: layout.baselineY - dotsDistance - dotRadius,
+        maxY: layout.baselineY + dotRadius,
+      };
+    case "bar":
+      return {
+        minY: paddingTop,
+        maxY: paddingTop + barTextSize + barHeight,
+      };
+    case "gradualTempoChange":
+      return {
+        minY: paddingTop + barTextSize - gradualTempoChangeTipSize,
+        maxY: paddingTop + barTextSize + gradualTempoChangeTipSize,
+      };
+    default:
+      throw new ExhaustiveError(p);
+  }
 }
 function renderKey(
   canvas: CanvasRenderingContext2D,
