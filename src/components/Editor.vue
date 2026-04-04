@@ -25,6 +25,11 @@ let editor: monaco.editor.IStandaloneCodeEditor | null = null;
 let disposables: monaco.IDisposable[] = [];
 let resizeObserver: ResizeObserver | null = null;
 
+function applyScoreText(text: string) {
+  scoreText.value = text;
+  editor?.setValue(text);
+}
+
 onMounted(() => {
   if (!container.value) return;
 
@@ -81,7 +86,7 @@ const demos = [
       <h2 un-text="lg">デモ</h2>
       <ul un-list="disc inside">
         <li v-for="demo in demos" :key="demo.name">
-          <button un-text="primary" @click="scoreText = demo.text">{{ demo.name }}</button>
+          <button un-text="primary" @click="applyScoreText(demo.text)">{{ demo.name }}</button>
         </li>
       </ul>
     </div>
