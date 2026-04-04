@@ -148,7 +148,10 @@ export type VerticalBounds = {
   maxY: number;
 };
 
-type VerticalLayout = Pick<RowLayout, "baselineY" | "height" | "chordCenterY">;
+type VerticalLayout = Pick<RowLayout, "baselineY" | "height"> & {
+  contentTopY?: number;
+  cropHeight?: number;
+};
 
 const keyLength = dotRadius * 10;
 const fromKeyLength = keyLength * 0.6;
@@ -156,7 +159,10 @@ const keyTipLength = dotRadius * 4;
 const keyTipAngle = 20;
 const keyBaseX = paddingLeft - keyLength;
 function getKeyBaseY(layout: VerticalLayout) {
-  return layout.chordCenterY;
+  if (layout.contentTopY === undefined || layout.cropHeight === undefined) {
+    return layout.height / 2;
+  }
+  return layout.contentTopY + layout.cropHeight / 2;
 }
 export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): VerticalBounds {
   switch (p.type) {

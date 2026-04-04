@@ -1,7 +1,7 @@
 // NOTE:
 // - major/minorという書き方より、diatonic / flipped（Iならdiatonicがmaj、flippedがmin）の方が構造的には近いので、diatonic / flippedをベースにする
 
-import { minCropRowHeight, paddingTop, rowBottomPadding, rowHeight } from "./base";
+import { minCropRowHeight, paddingTop, rowBottomPadding, rowHeight, width } from "./base";
 import { getChordBounds, renderChord, type Chord } from "./chord";
 import {
   getPunctuationBounds,
@@ -10,6 +10,7 @@ import {
   renderPunctuation,
   type Punctuation,
 } from "./punctation";
+import { Context } from "svgcanvas";
 
 export { width, rowHeight } from "./base.ts";
 
@@ -95,6 +96,8 @@ export function render(
   chords: Chord[],
   punctations: Punctuation[],
 ) {
+  canvas.fillStyle = "black";
+  canvas.strokeStyle = "black";
   const layouts = computeRowLayouts(chords, punctations);
   for (const layout of layouts) {
     const row = layout.row;
@@ -102,9 +105,25 @@ export function render(
     const punctationsInRow = punctations.filter((p) =>
       "row" in p ? p.row === row : p.position[0] === row,
     );
-    renderRowToMainCanvas(canvas, chordsInRow, punctationsInRow, layout);
+    renderRowAt(canvas, chordsInRow, punctationsInRow, layout);
     renderRowGuideLine(canvas, layout);
   }
+}
+
+export function renderToSvg(chords: Chord[], punctations: Punctuation[]) {
+  if (typeof document === "undefined") {
+    throw new Error("renderToSvg requires a browser document");
+  }
+  const height = measureHeight(chords, punctations);
+  const canvas = new Context(width, height) as unknown as CanvasRenderingContext2D & {
+    getSerializedSvg(): string;
+  };
+
+  canvas.fillStyle = "white";
+  canvas.fillRect(0, 0, width, height);
+  render(canvas, chords, punctations);
+
+  return canvas.getSerializedSvg();
 }
 
 function getActualContentTopY(chords: Chord[], punctations: Punctuation[], layout: RowLayoutBase) {
@@ -169,33 +188,16 @@ function getContentBounds(chords: Chord[], punctations: Punctuation[], layout: R
   };
 }
 
-function renderRowToMainCanvas(
+function renderRowAt(
   canvas: CanvasRenderingContext2D,
   chords: Chord[],
   punctations: Punctuation[],
   layout: RowLayout,
 ) {
-  const rowCanvas =
-    canvas.canvas.ownerDocument?.createElement("canvas") ?? document.createElement("canvas");
-  rowCanvas.width = canvas.canvas.width;
-  rowCanvas.height = layout.height;
-  const rowContext = rowCanvas.getContext("2d");
-  if (rowContext === null) {
-    throw new Error("Failed to get row canvas context");
-  }
-
-  renderRow(rowContext, chords, punctations, layout);
-  canvas.drawImage(
-    rowCanvas,
-    0,
-    layout.contentTopY,
-    rowCanvas.width,
-    layout.cropHeight,
-    0,
-    layout.offsetY,
-    rowCanvas.width,
-    layout.cropHeight,
-  );
+  canvas.save();
+  canvas.translate(0, layout.offsetY - layout.contentTopY);
+  renderRow(canvas, chords, punctations, layout);
+  canvas.restore();
 }
 
 function renderRowGuideLine(canvas: CanvasRenderingContext2D, layout: RowLayout) {
@@ -205,7 +207,7 @@ function renderRowGuideLine(canvas: CanvasRenderingContext2D, layout: RowLayout)
   canvas.lineWidth = 1;
   canvas.beginPath();
   canvas.moveTo(0, guideLineY);
-  canvas.lineTo(canvas.canvas.width, guideLineY);
+  canvas.lineTo(width, guideLineY);
   canvas.stroke();
   canvas.restore();
 }
