@@ -23,6 +23,7 @@ monaco.editor.defineTheme(`${LANGUAGE_ID}-theme`, themeData);
 const container = useTemplateRef("container");
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
 let disposables: monaco.IDisposable[] = [];
+let resizeObserver: ResizeObserver | null = null;
 
 onMounted(() => {
   if (!container.value) return;
@@ -31,6 +32,7 @@ onMounted(() => {
     value: scoreText.value,
     language: LANGUAGE_ID,
     theme: `${LANGUAGE_ID}-theme`,
+    automaticLayout: false,
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
     fontSize: 14,
     lineNumbers: "on",
@@ -51,10 +53,16 @@ onMounted(() => {
       scoreText.value = editor!.getValue();
     }),
   );
+
+  resizeObserver = new ResizeObserver(() => {
+    editor?.layout();
+  });
+  resizeObserver.observe(container.value);
 });
 
 onUnmounted(() => {
   disposables.forEach((d) => d.dispose());
+  resizeObserver?.disconnect();
   editor?.dispose();
 });
 
