@@ -72,7 +72,8 @@ const shiftAmount = dotRadius * 8;
 const chordDotRadius = dotRadius;
 const nonDiatonicLoopSize = dotRadius * 2;
 const firstTensionLength = dotRadius * 3;
-const attachmentShift = dotRadius * 1;
+const lineAttachmentShift = dotRadius * 2;
+const circleAttachmentShift = dotRadius * 1;
 const susDotRadius = dotRadius * 0.5;
 const nonDiatonicSusLength = dotRadius * 2;
 const omitCircleRadius = dotRadius * 2;
@@ -134,8 +135,8 @@ function drawLineLastAttachmentOnBezier(
   y3: number,
   firstTension: null | "diatonic" | "flipped" | "6th" | "b6th",
 ) {
-  const baseX = right - attachmentShift;
-  const guideX = Math.max(left, baseX - attachmentShift);
+  const baseX = right - lineAttachmentShift;
+  const guideX = Math.max(left, baseX - lineAttachmentShift);
   const baseY = bezierYAt(left, right, y0, cpY, y3, baseX);
   const guideY = bezierYAt(left, right, y0, cpY, y3, guideX);
   drawLineLastAttachment(canvas, baseX, baseY, firstTension, baseX - guideX, baseY - guideY);
@@ -149,8 +150,8 @@ function drawLineLastAttachmentOnLine(
   y2: number,
   firstTension: null | "diatonic" | "flipped" | "6th" | "b6th",
 ) {
-  const baseX = x2 - attachmentShift;
-  const guideX = Math.max(x1, baseX - attachmentShift);
+  const baseX = x2 - lineAttachmentShift;
+  const guideX = Math.max(x1, baseX - lineAttachmentShift);
   const baseY = lineYAt(x1, y1, x2, y2, baseX);
   const guideY = lineYAt(x1, y1, x2, y2, guideX);
   drawLineLastAttachment(canvas, baseX, baseY, firstTension, baseX - guideX, baseY - guideY);
@@ -166,8 +167,8 @@ function drawCircleLastAttachmentOnBezier(
   outerDirection: "up" | "down",
   firstTension: null | "diatonic" | "flipped" | "6th" | "b6th",
 ) {
-  const baseX = right - attachmentShift;
-  const guideX = Math.max(left, baseX - attachmentShift);
+  const baseX = right - circleAttachmentShift;
+  const guideX = Math.max(left, baseX - circleAttachmentShift);
   const baseY = bezierYAt(left, right, y0, cpY, y3, baseX);
   const guideY = bezierYAt(left, right, y0, cpY, y3, guideX);
   drawCircleLastAttachment(
@@ -390,8 +391,8 @@ function drawRoot(
       canvas.stroke();
       drawSeventhLikeAttachment(
         canvas,
-        right - attachmentShift,
-        lineYAt(left + nonDiatonicLoopSize, -shiftAmount, right, 0, right - attachmentShift),
+        right - circleAttachmentShift,
+        lineYAt(left + nonDiatonicLoopSize, -shiftAmount, right, 0, right - circleAttachmentShift),
         chord,
         right - (left + nonDiatonicLoopSize),
         shiftAmount,
@@ -465,8 +466,8 @@ function drawRoot(
       canvas.stroke();
       drawSeventhLikeAttachment(
         canvas,
-        right - attachmentShift,
-        lineYAt(left, 0, right, shiftAmount, right - attachmentShift),
+        right - circleAttachmentShift,
+        lineYAt(left, 0, right, shiftAmount, right - circleAttachmentShift),
         chord,
         right - left,
         shiftAmount,

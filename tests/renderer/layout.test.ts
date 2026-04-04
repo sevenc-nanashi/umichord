@@ -76,6 +76,19 @@ describe("row layout", () => {
     expect(layouts[0]!.chordEndY).toBe(paddingTop + getChordRightEdgeY(chords[0]!) * 2);
   });
 
+  test("位置が変わるコードが続く行でも高さ計算が累積ずれを反映する", () => {
+    const { chords, punctuations } = parseScore("1+ 1+");
+    const layouts = computeRowLayouts(chords, punctuations);
+    const firstBounds = getChordBounds(chords[0]!);
+    const secondBounds = getChordBounds(chords[1]!);
+    const accumulatedBottom = paddingTop + getChordRightEdgeY(chords[0]!) + secondBounds.maxY;
+
+    expect(layouts).toHaveLength(1);
+    expect(layouts[0]!.chordTopY).toBe(paddingTop + firstBounds.minY);
+    expect(layouts[0]!.chordBottomY).toBe(accumulatedBottom);
+    expect(layouts[0]!.contentBottomY).toBeGreaterThanOrEqual(accumulatedBottom);
+  });
+
   test("bar がある行ではコード行の位置は維持されて上方向に行領域が広がる", () => {
     const { chords, punctuations } = parseScore("!bar 1/1\n1");
     const layouts = computeRowLayouts(chords, punctuations);

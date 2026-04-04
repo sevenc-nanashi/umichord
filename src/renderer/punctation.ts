@@ -16,6 +16,7 @@ const barHeight = dotRadius * 4;
 const barTextSize = dotRadius * 4;
 const gradualTempoChangeTipSize = dotRadius * 4;
 const gradualTempoChangePadding = dotRadius;
+const barVerticalOffset = dotRadius * 2;
 
 /**
  * minorSection: 白抜きコンマ
@@ -150,7 +151,7 @@ function getChordEndY(layout: VerticalLayout) {
 }
 
 function getBarBottomY(layout: VerticalLayout) {
-  return layout.chordTopY;
+  return layout.chordTopY - barVerticalOffset;
 }
 
 function getGradualTempoChangeLineY(layout: VerticalLayout) {

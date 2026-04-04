@@ -26,6 +26,35 @@ export type RowLayout = {
 
 type RowLayoutBase = Omit<RowLayout, "contentTopY" | "contentBottomY" | "cropHeight">;
 
+type PositionedChordBounds = {
+  minY: number;
+  maxY: number;
+};
+
+function getChordsInRenderOrder(chords: Chord[]) {
+  return [...chords].sort((left, right) => {
+    const leftPosition = left.position[1] / left.position[2];
+    const rightPosition = right.position[1] / right.position[2];
+    return leftPosition - rightPosition;
+  });
+}
+
+function getPositionedChordBounds(chords: Chord[]): PositionedChordBounds[] {
+  const bounds: PositionedChordBounds[] = [];
+  let currentY = 0;
+
+  for (const chord of getChordsInRenderOrder(chords)) {
+    const chordBounds = getChordBounds(chord);
+    bounds.push({
+      minY: currentY + chordBounds.minY,
+      maxY: currentY + chordBounds.maxY,
+    });
+    currentY += getChordRightEdgeY(chord);
+  }
+
+  return bounds;
+}
+
 function getMaxRow(chords: Chord[], punctations: Punctuation[]) {
   return Math.max(
     -1,
@@ -48,21 +77,16 @@ export function computeRowLayouts(chords: Chord[], punctations: Punctuation[]): 
     const punctationsInRow = punctations.filter((p) =>
       "row" in p ? p.row === row : p.position[0] === row,
     );
-    const chordBounds = chordsInRow.map((chord) => getChordBounds(chord));
-    const minChordTop = Math.min(0, ...chordBounds.map((bounds) => bounds.minY));
-    const maxChordBottom = Math.max(0, ...chordBounds.map((bounds) => bounds.maxY));
+    const positionedChordBounds = getPositionedChordBounds(chordsInRow);
+    const minChordTop = Math.min(0, ...positionedChordBounds.map((bounds) => bounds.minY));
+    const maxChordBottom = Math.max(0, ...positionedChordBounds.map((bounds) => bounds.maxY));
     const baselineY = paddingTop - minChordTop;
     const height = Math.max(rowHeight, baselineY + maxChordBottom + rowBottomPadding);
     const chordTopY = baselineY + minChordTop;
     const chordBottomY = baselineY + maxChordBottom;
     const chordCenterY = chordsInRow.length === 0 ? height / 2 : (chordTopY + chordBottomY) / 2;
     let chordEndYOffset = 0;
-    const chordsInRenderOrder = [...chordsInRow].sort((left, right) => {
-      const leftPosition = left.position[1] / left.position[2];
-      const rightPosition = right.position[1] / right.position[2];
-      return leftPosition - rightPosition;
-    });
-    for (const chord of chordsInRenderOrder) {
+    for (const chord of getChordsInRenderOrder(chordsInRow)) {
       chordEndYOffset += getChordRightEdgeY(chord);
     }
     const chordEndY = baselineY + chordEndYOffset;
@@ -136,7 +160,9 @@ function getActualContentTopY(chords: Chord[], punctations: Punctuation[], layou
   const chordTopY =
     chords.length === 0
       ? Number.POSITIVE_INFINITY
-      : Math.min(...chords.map((chord) => layout.baselineY + getChordBounds(chord).minY));
+      : Math.min(
+          ...getPositionedChordBounds(chords).map((bounds) => layout.baselineY + bounds.minY),
+        );
   const punctuationTopY =
     punctations.length === 0
       ? Number.POSITIVE_INFINITY
@@ -153,7 +179,9 @@ function getActualContentBottomY(
   const chordBottomY =
     chords.length === 0
       ? Number.NEGATIVE_INFINITY
-      : Math.max(...chords.map((chord) => layout.baselineY + getChordBounds(chord).maxY));
+      : Math.max(
+          ...getPositionedChordBounds(chords).map((bounds) => layout.baselineY + bounds.maxY),
+        );
   const punctuationBottomY =
     punctations.length === 0
       ? Number.NEGATIVE_INFINITY
