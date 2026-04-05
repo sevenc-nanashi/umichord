@@ -61,7 +61,7 @@ export const monarchTokens: Monaco.languages.IMonarchLanguage = {
       ],
       [/^(!)(bar)(\s+\d+\/\d+)/, ["directive.excl", "directive.name", "fraction"]],
       // 不明な指示 or 引数が足りない場合のフォールバック
-      [/^(!)\S*/, ["directive.excl", "directive.name"]],
+      [/^(!)(\S*)/, ["directive.excl", "directive.name"]],
 
       // ====== コード行 ======
 
