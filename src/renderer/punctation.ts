@@ -327,7 +327,7 @@ function renderBar(
   canvas.stroke();
 
   const text =
-    `${p.tempo} ${p.timeSignature ? `${p.timeSignature[0]}/${p.timeSignature[1]}` : ""}`.trim();
+    `${p.tempo ?? ""} ${p.timeSignature ? `${p.timeSignature[0]}/${p.timeSignature[1]}` : ""}`.trim();
   if (text) {
     canvas.font = `${barTextSize}px sans-serif`;
     canvas.textAlign = "left";

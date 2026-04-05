@@ -242,85 +242,94 @@ export function parseScore(text: string): { chords: Chord[]; punctuations: Punct
   const punctuations: Punctuation[] = [];
   let currentRow = 0;
 
-  for (let line of text.split("\n")) {
-    // コメント除去（# が行頭か空白の直後にある場合のみ）
-    const commentMatch = line.match(/(^|\s)#/);
-    if (commentMatch?.index !== undefined) {
-      line = line.slice(0, commentMatch.index + (commentMatch[1] ? 1 : 0));
-    }
-    line = line.trim();
-    if (!line) continue;
-
-    // 特殊指示
-    if (line.startsWith("!")) {
-      const parts = line.slice(1).split(/\s+/);
-      const directive = parts[0];
-
-      switch (directive) {
-        case "bar": {
-          const [lenNum, lenDen] = parseFraction(parts[1]);
-          let tempo: number | undefined;
-          let timeSignature: [number, number] | undefined;
-          for (let i = 2; i < parts.length; i++) {
-            const p = parts[i];
-            if (/^\d+\/\d+$/.test(p)) {
-              const [n, d] = parseFraction(p);
-              timeSignature = [n, d];
-            } else if (/^\d+$/.test(p)) {
-              tempo = parseInt(p);
-            }
-          }
-          punctuations.push({
-            type: "bar",
-            row: currentRow,
-            length: [lenNum, lenDen],
-            ...(tempo !== undefined ? { tempo } : {}),
-            ...(timeSignature ? { timeSignature } : {}),
-          });
-          break;
-        }
-        case "gradualTempoChange": {
-          const [startNum, startDen] = parseFraction(parts[1]);
-          const [lenNum, lenDen] = parseFraction(parts[2]);
-          const direction = parts[3] as "up" | "down";
-          if (direction !== "up" && direction !== "down") {
-            throw new ParseError(`Invalid gradualTempoChange direction: "${parts[3]}"`);
-          }
-          punctuations.push({
-            type: "gradualTempoChange",
-            position: [currentRow, startNum, startDen],
-            length: [lenNum, lenDen],
-            direction,
-          });
-          break;
-        }
-        case "key": {
-          const to = parseKeyName(parts[1]);
-          punctuations.push({ type: "key", row: currentRow, from: null, to });
-          break;
-        }
-        case "keyChange": {
-          const from = parseKeyName(parts[1]);
-          const to = parseKeyName(parts[2]);
-          punctuations.push({ type: "key", row: currentRow, from, to });
-          break;
-        }
-        default:
-          throw new ParseError(`Unknown directive: "!${directive}"`);
+  const rawLines = text.split("\n");
+  for (let lineIndex = 0; lineIndex < rawLines.length; lineIndex++) {
+    let line = rawLines[lineIndex];
+    try {
+      // コメント除去（# が行頭か空白の直後にある場合のみ）
+      const commentMatch = line.match(/(^|\s)#/);
+      if (commentMatch?.index !== undefined) {
+        line = line.slice(0, commentMatch.index + (commentMatch[1] ? 1 : 0));
       }
-      continue;
-    }
+      line = line.trim();
+      if (!line) continue;
 
-    // 約物をストリップ
-    const { line: chordsLine, mark } = stripPunctuation(line);
-    if (mark) {
-      punctuations.push(markToPunctuation(mark, currentRow));
-    }
+      // 特殊指示
+      if (line.startsWith("!")) {
+        const parts = line.slice(1).split(/\s+/);
+        const directive = parts[0];
 
-    // コードレイアウト
-    const rowChords = parseChordLayout(chordsLine, currentRow);
-    chords.push(...rowChords);
-    if (rowChords.length > 0) currentRow++;
+        switch (directive) {
+          case "bar": {
+            const [lenNum, lenDen] = parseFraction(parts[1]);
+            let tempo: number | undefined;
+            let timeSignature: [number, number] | undefined;
+            for (let i = 2; i < parts.length; i++) {
+              const p = parts[i];
+              if (/^\d+\/\d+$/.test(p)) {
+                const [n, d] = parseFraction(p);
+                timeSignature = [n, d];
+              } else if (/^\d+$/.test(p)) {
+                tempo = parseInt(p);
+              }
+            }
+            punctuations.push({
+              type: "bar",
+              row: currentRow,
+              length: [lenNum, lenDen],
+              ...(tempo !== undefined ? { tempo } : {}),
+              ...(timeSignature ? { timeSignature } : {}),
+            });
+            break;
+          }
+          case "gradualTempoChange": {
+            const [startNum, startDen] = parseFraction(parts[1]);
+            const [lenNum, lenDen] = parseFraction(parts[2]);
+            const direction = parts[3] as "up" | "down";
+            if (direction !== "up" && direction !== "down") {
+              throw new ParseError(`Invalid gradualTempoChange direction: "${parts[3]}"`);
+            }
+            punctuations.push({
+              type: "gradualTempoChange",
+              position: [currentRow, startNum, startDen],
+              length: [lenNum, lenDen],
+              direction,
+            });
+            break;
+          }
+          case "key": {
+            const to = parseKeyName(parts[1]);
+            punctuations.push({ type: "key", row: currentRow, from: null, to });
+            break;
+          }
+          case "keyChange": {
+            const from = parseKeyName(parts[1]);
+            const to = parseKeyName(parts[2]);
+            punctuations.push({ type: "key", row: currentRow, from, to });
+            break;
+          }
+          default:
+            throw new ParseError(`Unknown directive: "!${directive}"`);
+        }
+        continue;
+      }
+
+      // 約物をストリップ
+      const { line: chordsLine, mark } = stripPunctuation(line);
+      if (mark) {
+        punctuations.push(markToPunctuation(mark, currentRow));
+      }
+
+      // コードレイアウト
+      const rowChords = parseChordLayout(chordsLine, currentRow);
+      chords.push(...rowChords);
+      if (rowChords.length > 0) currentRow++;
+    } catch (e) {
+      if (e instanceof ParseError && e.line === undefined) {
+        e.line = lineIndex + 1;
+      }
+      throw e;
+    }
   }
 
   return { chords, punctuations };

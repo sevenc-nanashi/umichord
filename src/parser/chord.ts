@@ -1,6 +1,7 @@
 import type { Degree } from "../renderer/base";
 
 export class ParseError extends Error {
+  line?: number;
   constructor(message: string) {
     super(message);
     this.name = "ParseError";

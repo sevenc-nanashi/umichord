@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
-import { onMounted, onUnmounted, useTemplateRef } from "vue";
+import { onMounted, onUnmounted, useTemplateRef, watch } from "vue";
 import { LANGUAGE_ID, monarchTokens, themeData } from "../lib/monacoLanguage";
-import { scoreText } from "../stores/score";
+import { parseError, scoreText } from "../stores/score";
 import kotoDemo from "../assets/demos/koto.txt?raw";
 
 // Monaco は Web Worker を必要とするが、構文ハイライトのみの用途なのでスタブを使用
@@ -58,6 +58,31 @@ onMounted(() => {
       scoreText.value = editor!.getValue();
     }),
   );
+
+  const stopErrorWatch = watch(
+    parseError,
+    (error) => {
+      const model = editor?.getModel();
+      if (!model) return;
+      if (error) {
+        const lineNumber = error.line ?? 1;
+        monaco.editor.setModelMarkers(model, LANGUAGE_ID, [
+          {
+            severity: monaco.MarkerSeverity.Error,
+            message: error.message,
+            startLineNumber: lineNumber,
+            startColumn: 1,
+            endLineNumber: lineNumber,
+            endColumn: model.getLineMaxColumn(lineNumber),
+          },
+        ]);
+      } else {
+        monaco.editor.setModelMarkers(model, LANGUAGE_ID, []);
+      }
+    },
+    { immediate: true },
+  );
+  disposables.push({ dispose: stopErrorWatch });
 
   resizeObserver = new ResizeObserver(() => {
     editor?.layout();

@@ -1,12 +1,18 @@
 import { computed, ref } from "vue";
-import { parseScore } from "../parser";
+import { ParseError, parseScore } from "../parser";
 
 export const scoreText = ref("");
 
-export const parsedScore = computed(() => {
+const parseResult = computed(() => {
   try {
-    return parseScore(scoreText.value);
-  } catch {
-    return { chords: [], punctuations: [] };
+    return { score: parseScore(scoreText.value), error: null };
+  } catch (e) {
+    if (e instanceof ParseError) {
+      return { score: { chords: [], punctuations: [] }, error: e };
+    }
+    return { score: { chords: [], punctuations: [] }, error: null };
   }
 });
+
+export const parsedScore = computed(() => parseResult.value.score);
+export const parseError = computed(() => parseResult.value.error);
