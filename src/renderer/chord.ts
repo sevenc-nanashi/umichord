@@ -77,7 +77,7 @@ const circleAttachmentShift = dotRadius * 0.5;
 const susDotRadius = dotRadius * 0.5;
 const nonDiatonicSusLength = dotRadius * 2;
 const omitCircleRadius = dotRadius * 2;
-const fifthShiftLength = dotRadius * 1;
+const fifthShiftLength = dotRadius * 1.5;
 const tensionRadius = dotRadius;
 const slashBassSize = dotRadius * 4;
 const decorationGap = dotRadius * 2;
@@ -180,6 +180,12 @@ function drawCircleLastAttachmentOnBezier(
     baseX - guideX,
     baseY - guideY,
   );
+}
+
+function getSeventhLikeAttachmentShift(chord: Chord): number {
+  const isDim = chord.variant === "diminished";
+  const isMin7Flat5 = chord.firstTension === "diatonic" && chord.fifthShift === "flat";
+  return isDim || isMin7Flat5 ? lineAttachmentShift : circleAttachmentShift;
 }
 
 export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
@@ -374,7 +380,8 @@ function drawRoot(
         chord.firstTension,
       );
       break;
-    case "vb":
+    case "vb": {
+      const attachmentShift = getSeventhLikeAttachmentShift(chord);
       canvas.beginPath();
       canvas.moveTo(left, 0);
       canvas.lineTo(left + nonDiatonicLoopSize, -shiftAmount);
@@ -391,13 +398,14 @@ function drawRoot(
       canvas.stroke();
       drawSeventhLikeAttachment(
         canvas,
-        right - circleAttachmentShift,
-        lineYAt(left + nonDiatonicLoopSize, -shiftAmount, right, 0, right - circleAttachmentShift),
+        right - attachmentShift,
+        lineYAt(left + nonDiatonicLoopSize, -shiftAmount, right, 0, right - attachmentShift),
         chord,
         right - (left + nonDiatonicLoopSize),
         shiftAmount,
       );
       break;
+    }
     case "v":
       canvas.beginPath();
       canvas.moveTo(left, 0);
@@ -459,20 +467,22 @@ function drawRoot(
         chord.firstTension,
       );
       break;
-    case "vii":
+    case "vii": {
+      const attachmentShift = getSeventhLikeAttachmentShift(chord);
       canvas.beginPath();
       canvas.moveTo(left, 0);
       canvas.lineTo(right, shiftAmount);
       canvas.stroke();
       drawSeventhLikeAttachment(
         canvas,
-        right - circleAttachmentShift,
-        lineYAt(left, 0, right, shiftAmount, right - circleAttachmentShift),
+        right - attachmentShift,
+        lineYAt(left, 0, right, shiftAmount, right - attachmentShift),
         chord,
         right - left,
         shiftAmount,
       );
       break;
+    }
   }
   return metrics;
 }
@@ -1162,10 +1172,13 @@ function drawLineLastAttachment(
       break;
     case "b6th":
       {
-        const attachment = getAttachmentVector(tangentDx, tangentDy, 1);
-        const leftNormal = getLeftNormal(attachment.dx, attachment.dy);
-        const offsetX = -leftNormal.x * sixthShift;
-        const offsetY = -leftNormal.y * sixthShift;
+        const attachment = getAttachmentVector(tangentDx, tangentDy, -1);
+        let upperNormal = getLeftNormal(attachment.dx, attachment.dy);
+        if (upperNormal.y > 0) {
+          upperNormal = { x: -upperNormal.x, y: -upperNormal.y };
+        }
+        const offsetX = upperNormal.x * sixthShift;
+        const offsetY = upperNormal.y * sixthShift;
 
         canvas.beginPath();
         canvas.moveTo(baseX, baseY);
@@ -1247,16 +1260,10 @@ function drawCircleLastAttachment(
       canvas.arc(centerX, centerY, chordDotRadius, 0, 2 * Math.PI);
       canvas.stroke();
       canvas.beginPath();
-      canvas.moveTo(centerX - tangent.x * chordDotRadius, centerY - tangent.y * chordDotRadius);
-      canvas.lineTo(
-        centerX - tangent.x * firstTensionLength,
-        centerY - tangent.y * firstTensionLength,
-      );
-      canvas.moveTo(centerX + tangent.x * chordDotRadius, centerY + tangent.y * chordDotRadius);
-      canvas.lineTo(
-        centerX + tangent.x * firstTensionLength,
-        centerY + tangent.y * firstTensionLength,
-      );
+      canvas.moveTo(centerX - firstTensionLength, centerY);
+      canvas.lineTo(centerX - chordDotRadius, centerY);
+      canvas.moveTo(centerX + chordDotRadius, centerY);
+      canvas.lineTo(centerX + firstTensionLength, centerY);
       canvas.stroke();
       break;
     default:

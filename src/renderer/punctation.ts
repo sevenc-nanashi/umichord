@@ -121,7 +121,7 @@ type VerticalLayout = Pick<
 >;
 
 const keyLength = dotRadius * 10;
-const fromKeyLength = keyLength * 0.6;
+const fromKeyLength = keyLength * 0.5;
 const keyTipLength = dotRadius * 4;
 const keyTipAngle = 20;
 const keyBaseX = paddingLeft - keyLength;

@@ -3,6 +3,7 @@ import * as monaco from "monaco-editor";
 import { onMounted, onUnmounted, useTemplateRef, watch } from "vue";
 import { LANGUAGE_ID, monarchTokens, themeData } from "../lib/monacoLanguage";
 import { parseError, scoreText } from "../stores/score";
+import syntaxDemo from "../assets/demos/syntax.txt?raw";
 import kotoDemo from "../assets/demos/koto.txt?raw";
 
 // Monaco は Web Worker を必要とするが、構文ハイライトのみの用途なのでスタブを使用
@@ -98,7 +99,11 @@ onUnmounted(() => {
 
 const demos = [
   {
-    name: "六時、言の葉の木の下で。",
+    name: "構文デモ",
+    text: syntaxDemo,
+  },
+  {
+    name: "「六時、言の葉の木の下で。」 / 名無し。",
     text: kotoDemo,
   },
 ];
@@ -108,7 +113,7 @@ const demos = [
   <div un-h="[calc(100vh_-_4rem)]" un-border="l-1 primary" un-grid="~ rows-[auto_auto_1fr]">
     <div un-p="4">TODO: 説明いろいろ</div>
     <div un-p="4" un-border="t-1 primary">
-      <h2 un-text="lg">デモ</h2>
+      <h2 un-text="lg">サンプル</h2>
       <ul un-list="disc inside">
         <li v-for="demo in demos" :key="demo.name">
           <button un-text="primary" @click="applyScoreText(demo.text)">{{ demo.name }}</button>

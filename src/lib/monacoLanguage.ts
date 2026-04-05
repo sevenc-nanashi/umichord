@@ -98,6 +98,7 @@ export const monarchTokens: Monaco.languages.IMonarchLanguage = {
       // 行をまたいで chord 状態が持ち越された場合、次の行の先頭を正しく処理する。
       // これらは 7/6 の tension1 ルールより前に置く必要がある。
       [/^\s*#.*$/, "comment"],
+      [/^!.*$/, { token: "directive", next: "@pop" }],
       // 行頭のルート音: 状態遷移なし（chord のまま後続の修飾子を受け付ける）
       [/^[1-7][+-]?/, "root"],
       // 行頭のノーコード・空白
@@ -194,6 +195,7 @@ export const themeData: Monaco.editor.IStandaloneThemeData = {
     // 行末約物
     { token: "punct", foreground: "e05080", fontStyle: "bold" },
     // 特殊指示
+    { token: "directive", foreground: "3a7fcc", fontStyle: "bold" },
     { token: "directive.excl", foreground: "3a7fcc", fontStyle: "bold" },
     { token: "directive.name", foreground: "3a7fcc", fontStyle: "bold" },
     { token: "directive.dir", foreground: "7b6aa0" },

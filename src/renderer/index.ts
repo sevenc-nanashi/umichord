@@ -31,16 +31,15 @@ type PositionedChordBounds = {
   maxY: number;
 };
 
-function getBarRowTopExpansion(punctations: Punctuation[], layout: RowLayoutBase) {
-  const barPunctuations = punctations.filter((punctation) => punctation.type === "bar");
-  if (barPunctuations.length === 0) {
+function getPunctuationRowTopExpansion(punctations: Punctuation[], layout: RowLayoutBase) {
+  if (punctations.length === 0) {
     return 0;
   }
 
-  const minBarY = Math.min(
-    ...barPunctuations.map((punctation) => getPunctuationBounds(punctation, layout).minY),
+  const minPunctuationY = Math.min(
+    ...punctations.map((punctation) => getPunctuationBounds(punctation, layout).minY),
   );
-  return Math.max(0, -minBarY);
+  return Math.max(0, -minPunctuationY);
 }
 
 function getChordsInRenderOrder(chords: Chord[]) {
@@ -105,21 +104,24 @@ export function computeRowLayouts(chords: Chord[], punctations: Punctuation[]): 
       chordBottomY,
       chordEndY,
     };
-    const barRowTopExpansion = getBarRowTopExpansion(punctationsInRow, initialLayoutBase);
+    const punctuationRowTopExpansion = getPunctuationRowTopExpansion(
+      punctationsInRow,
+      initialLayoutBase,
+    );
     const layoutBase: RowLayoutBase = {
       ...initialLayoutBase,
-      baselineY: initialLayoutBase.baselineY + barRowTopExpansion,
-      height: initialLayoutBase.height + barRowTopExpansion,
-      chordCenterY: initialLayoutBase.chordCenterY + barRowTopExpansion,
-      chordTopY: initialLayoutBase.chordTopY + barRowTopExpansion,
-      chordBottomY: initialLayoutBase.chordBottomY + barRowTopExpansion,
-      chordEndY: initialLayoutBase.chordEndY + barRowTopExpansion,
+      baselineY: initialLayoutBase.baselineY + punctuationRowTopExpansion,
+      height: initialLayoutBase.height + punctuationRowTopExpansion,
+      chordCenterY: initialLayoutBase.chordCenterY + punctuationRowTopExpansion,
+      chordTopY: initialLayoutBase.chordTopY + punctuationRowTopExpansion,
+      chordBottomY: initialLayoutBase.chordBottomY + punctuationRowTopExpansion,
+      chordEndY: initialLayoutBase.chordEndY + punctuationRowTopExpansion,
     };
     const contentBounds = getContentBounds(
       chordsInRow,
       punctationsInRow,
       layoutBase,
-      minCropRowHeight + barRowTopExpansion,
+      minCropRowHeight + punctuationRowTopExpansion,
     );
     layouts.push({
       ...layoutBase,

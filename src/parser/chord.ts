@@ -9,7 +9,7 @@ export class ParseError extends Error {
 }
 
 const rootsWhoseMinorDiatonic = new Set(["ii", "iii", "vb", "vi", "vii"]);
-const rootsWhoseMinorSeventhDiatonic = new Set(["ii", "iii", "vb", "v", "vi"]);
+const rootsWhoseMinorSeventhDiatonic = new Set(["ii", "iii", "vb", "v", "vi", "vii"]);
 
 export type ChordData = {
   root: Degree;
