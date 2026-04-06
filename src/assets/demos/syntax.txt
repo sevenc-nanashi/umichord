@@ -13,7 +13,7 @@
 6+ 7- ~ ~
 
 # 3rd/5th/7thの変化は以下のようにします。
-1M 1m 1dim 1aug
+1m 1dim 1dim7 1aug
 1sus2 1sus4 1susb2 1sus#4
 1omit3 1omit5 1omit35 ~
 17 1M7 16 1b6

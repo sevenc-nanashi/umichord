@@ -2,6 +2,37 @@ import type * as Monaco from "monaco-editor";
 
 export const LANGUAGE_ID = "umichord";
 
+const directives: [RegExp, string[]][] = [
+  // !gradualTempoChange start length up|down
+  [
+    /^(!)(gradualTempoChange)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+)(up|down)$/,
+    ["directive.excl", "directive.name", "fraction", "fraction", "", "directive.dir"],
+  ],
+  // !keyChange prevKey newKey
+  [
+    /^(!)(keyChange)(\s+[A-G][#b]?)(\s+[A-G][#b]?)$/,
+    ["directive.excl", "directive.name", "keyname", "keyname"],
+  ],
+  // !key name
+  [/^(!)(key)(\s+[A-G][#b]?)$/, ["directive.excl", "directive.name", "keyname"]],
+  // !bar length tempo timeSig（全組み合わせ: 長いものから先）
+  [
+    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+)(\s+\d+\/\d+)$/,
+    ["directive.excl", "directive.name", "fraction", "tempo", "fraction"],
+  ],
+  // !bar length tempo
+  [/^(!)(bar)(\s+\d+\/\d+)(\s+\d+)$/, ["directive.excl", "directive.name", "fraction", "tempo"]],
+  // !bar length timeSig
+  [
+    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)$/,
+    ["directive.excl", "directive.name", "fraction", "fraction"],
+  ],
+  // !bar length
+  [/^(!)(bar)(\s+\d+\/\d+)$/, ["directive.excl", "directive.name", "fraction"]],
+  // 不明な指示 or 引数が足りない場合のフォールバック
+  [/^(!)(\S*)/, ["directive.excl", "directive.name"]],
+];
+
 /**
  * Monarch トークナイザ定義
  *
@@ -33,35 +64,7 @@ export const monarchTokens: Monaco.languages.IMonarchLanguage = {
       [/\s#.*$/, "comment"],
 
       // ====== 特殊指示行（行全体をキャプチャグループで処理、サブ状態は使わない） ======
-      // !gradualTempoChange start length up|down
-      [
-        /^(!)(gradualTempoChange)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+)(up|down)/,
-        ["directive.excl", "directive.name", "fraction", "fraction", "", "directive.dir"],
-      ],
-      // !keyChange prevKey newKey
-      [
-        /^(!)(keyChange)(\s+[A-G][#b]?)(\s+[A-G][#b]?)/,
-        ["directive.excl", "directive.name", "keyname", "keyname"],
-      ],
-      // !key name
-      [/^(!)(key)(\s+[A-G][#b]?)/, ["directive.excl", "directive.name", "keyname"]],
-      // !bar length tempo timeSig（全組み合わせ: 長いものから先）
-      [
-        /^(!)(bar)(\s+\d+\/\d+)(\s+\d+)(\s+\d+\/\d+)/,
-        ["directive.excl", "directive.name", "fraction", "tempo", "fraction"],
-      ],
-      [
-        /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+\d+)/,
-        ["directive.excl", "directive.name", "fraction", "fraction", "tempo"],
-      ],
-      [/^(!)(bar)(\s+\d+\/\d+)(\s+\d+)/, ["directive.excl", "directive.name", "fraction", "tempo"]],
-      [
-        /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)/,
-        ["directive.excl", "directive.name", "fraction", "fraction"],
-      ],
-      [/^(!)(bar)(\s+\d+\/\d+)/, ["directive.excl", "directive.name", "fraction"]],
-      // 不明な指示 or 引数が足りない場合のフォールバック
-      [/^(!)(\S*)/, ["directive.excl", "directive.name"]],
+      ...directives,
 
       // ====== コード行 ======
 
@@ -94,11 +97,15 @@ export const monarchTokens: Monaco.languages.IMonarchLanguage = {
     // ルート音の直後に続くコード修飾子をハイライトする状態
     // （lookbehind 不要で 7th/6th をルートと区別できる）
     chord: [
+      // NOTE: chord 状態は行をまたいで持ち越される可能性があるため、directivesをここにも置く必要がある。
+      ...directives.map(
+        ([regex, tokenTypes]) => [regex, tokenTypes, "@pop"] as [RegExp, string[], string],
+      ),
+
       // ── 行頭専用（^ は Monarch では pos=0 のみマッチ）──
       // 行をまたいで chord 状態が持ち越された場合、次の行の先頭を正しく処理する。
       // これらは 7/6 の tension1 ルールより前に置く必要がある。
       [/^\s*#.*$/, "comment"],
-      [/^!.*$/, { token: "directive", next: "@pop" }],
       // 行頭のルート音: 状態遷移なし（chord のまま後続の修飾子を受け付ける）
       [/^[1-7][+-]?/, "root"],
       // 行頭のノーコード・空白
