@@ -116,7 +116,7 @@ const demos = [
 
 <template>
   <div un-h="[calc(100vh_-_4rem)]" un-border="l-1 primary" un-grid="~ rows-[auto_1fr]">
-    <div un-p="4" un-border="t-1 primary">
+    <div un-p="4">
       <h2 un-text="lg">サンプル</h2>
       <ul un-list="disc inside">
         <li v-for="demo in demos" :key="demo.name">
