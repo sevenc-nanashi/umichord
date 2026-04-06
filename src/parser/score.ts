@@ -246,10 +246,9 @@ export function parseScore(text: string): { chords: Chord[]; punctuations: Punct
   for (let lineIndex = 0; lineIndex < rawLines.length; lineIndex++) {
     let line = rawLines[lineIndex];
     try {
-      // コメント除去（# が行頭か空白の直後にある場合のみ）
-      const commentMatch = line.match(/(^|\s)#/);
-      if (commentMatch?.index !== undefined) {
-        line = line.slice(0, commentMatch.index + (commentMatch[1] ? 1 : 0));
+      // コメントは行頭の # のみ許可
+      if (line.trimStart().startsWith("#")) {
+        continue;
       }
       line = line.trim();
       if (!line) continue;

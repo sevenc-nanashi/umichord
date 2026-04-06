@@ -12,13 +12,13 @@
 !note Intro
 4M7 57 3m7 1M7
 4M7 57 3m7 1M7,,
-!note Verse 1
+!note Verse #1
 4M7 57 3m7 1M7
 4M7 57 3m7 1M7,,
-!note Bridge 1
+!note Bridge #1
 4M7 3m7 [6m7 6m7(=)] 57
 4M7 3m7 [6m7 6m7(=)] 57,,
-!note Chorus 1
+!note Chorus #1
 4M7 3m7 [6m7 6m7(=)] 57,
 4M7 3m7 [6m7 6m7(=)] [57 ~].
 
@@ -26,10 +26,10 @@
 !keyChange D D#
 4M7 57 [3m7 3m7(=)] 1M7
 4M7 57 [3m7 3m7(=)] 1M7,,
-!note Verse 2
+!note Verse #2
 4M7 57 3m7 1M7
 4M7 57 3m7 [1M7 3m7/5],,
-!note Bridge 2
+!note Bridge #2
 !keyChange D# E
 4M7 57 3m7 1M7
 4M7 57 3m7 [1M7 3m7/5],,
@@ -38,10 +38,10 @@
 !keyChange E D
 4M7 57 3m7 [17 3m7]
 4M7 57 3m7 [17 ~],,
-!note Chorus 2
+!note Chorus #2
 4M7 57 [3m7 3m7(=)] 1M7
 4M7 57 [3m7 3m7(=)] [1M7 ~].
-!note Chorus 3
+!note Chorus #3
 !keyChange D F#
 4M7 57 [3m7 3m7(=)] 1M7
 4M7 57 [3m7 3m7(=)] 1M7.

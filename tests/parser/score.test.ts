@@ -11,13 +11,12 @@ function lengthValue(chord: { length: [number, number] }): number {
 
 describe("parseScore", () => {
   describe("コメント", () => {
-    test("# 以降は無視される", () => {
-      const { chords } = parseScore("1 2 # これはコメント");
-      expect(chords).toHaveLength(2);
-    });
     test("# のみの行は無視される", () => {
       const { chords } = parseScore("# コメント行\n1");
       expect(chords).toHaveLength(1);
+    });
+    test("行途中の # はコメントとして扱わない", () => {
+      expect(() => parseScore("1 2 # これはコメント")).toThrow();
     });
   });
 
