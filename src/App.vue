@@ -11,7 +11,7 @@ import Editor from "./components/Editor.vue";
   </div>
 </template>
 
-<style>
+<style scoped>
 .app {
   display: grid;
   grid-template-areas:

@@ -16,6 +16,7 @@
     "vue": "^3.5.30"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.5",
     "@vizejs/vite-plugin": "^0.37.0",
     "typescript": "~5.9.3",
     "unocss": "^66.6.7",
@@ -28,9 +29,6 @@
     "overrides": {
       "vite": "npm:@voidzero-dev/vite-plus-core@latest",
       "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
-    },
-    "patchedDependencies": {
-      "@unocss/vite": "patches/@unocss__vite.patch"
     }
   }
 }

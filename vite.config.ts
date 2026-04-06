@@ -1,5 +1,6 @@
 import { defineConfig } from "vite-plus";
-import vize from "@vizejs/vite-plugin";
+// import vize from "@vizejs/vite-plugin";
+import vue from "@vitejs/plugin-vue";
 import uno from "unocss/vite";
 import icons from "unplugin-icons/vite";
 import { FileSystemIconLoader } from "unplugin-icons/loaders";
@@ -10,7 +11,9 @@ export default defineConfig({
   },
   plugins: [
     uno(),
-    vize(),
+    // NOTE: unocssはvizeに対応していないのでvueを使う
+    // vize(),
+    vue(),
     icons({
       customCollections: {
         svg: FileSystemIconLoader("./src/assets/svg"),
