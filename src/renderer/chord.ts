@@ -87,6 +87,8 @@ type RootLayout = {
   centerY: number;
   shiftY: number;
   rightEdgeY: number;
+  minY: number;
+  maxY: number;
 };
 
 type DecorationLayout = {
@@ -195,13 +197,14 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
   const right = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
   const centerX = lerp(left, right, 0.5);
 
-  const { centerY, shiftY, rightEdgeY } = drawRoot(canvas, chord, left, right, centerX);
+  const rootLayout = drawRoot(canvas, chord, left, right, centerX);
+  const { centerY, shiftY } = rootLayout;
   drawVariant(canvas, chord, centerX, centerY);
   drawOmit(canvas, chord, centerX, centerY);
   drawFifthShift(canvas, chord, centerX, centerY);
   canvas.translate(0, shiftY);
   const decorationLayout = getDecorationLayout(
-    rightEdgeY - shiftY,
+    getDecorationAnchorY(chord, rootLayout),
     chord.tensions.length,
     chord.slashBass !== null,
   );
@@ -210,16 +213,13 @@ export function renderChord(canvas: CanvasRenderingContext2D, chord: Chord) {
 }
 
 export function getChordBounds(chord: Chord): ChordBounds {
-  const { centerY, shiftY, rightEdgeY, minY, maxY } = getRootMetrics(chord);
-  let bounds: ChordBounds = { minY, maxY };
-
-  bounds = expandBounds(bounds, getVariantBounds(chord, centerY));
-  bounds = expandBounds(bounds, getOmitBounds(chord, centerY));
-  bounds = expandBounds(bounds, getFifthShiftBounds(chord, centerY));
-  bounds = expandBounds(bounds, getFirstTensionBounds(chord, rightEdgeY));
+  const rootLayout = getRootMetrics(chord);
+  const { shiftY } = rootLayout;
+  let bounds = getChordBodyBounds(chord, rootLayout);
+  bounds = expandBounds(bounds, getFirstTensionBounds(chord, rootLayout.rightEdgeY));
 
   const decorationLayout = getDecorationLayout(
-    rightEdgeY - shiftY,
+    getDecorationAnchorY(chord, rootLayout),
     chord.tensions.length,
     chord.slashBass !== null,
   );
@@ -487,7 +487,7 @@ function drawRoot(
   return metrics;
 }
 
-function getRootMetrics(chord: Chord): RootLayout & ChordBounds {
+function getRootMetrics(chord: Chord): RootLayout {
   let centerY = 0;
   let shiftY = 0;
   let rightEdgeY = 0;
@@ -563,6 +563,19 @@ function getRootMetrics(chord: Chord): RootLayout & ChordBounds {
       break;
   }
   return { centerY, shiftY, rightEdgeY, minY, maxY };
+}
+
+function getChordBodyBounds(chord: Chord, rootLayout: RootLayout): ChordBounds {
+  const { centerY, minY, maxY } = rootLayout;
+  let bounds: ChordBounds = { minY, maxY };
+  bounds = expandBounds(bounds, getVariantBounds(chord, centerY));
+  bounds = expandBounds(bounds, getOmitBounds(chord, centerY));
+  bounds = expandBounds(bounds, getFifthShiftBounds(chord, centerY));
+  return bounds;
+}
+
+function getDecorationAnchorY(chord: Chord, rootLayout: RootLayout) {
+  return getChordBodyBounds(chord, rootLayout).maxY - rootLayout.shiftY;
 }
 
 function getTensionBottomY(tensionY: number, tensionCount: number): number {

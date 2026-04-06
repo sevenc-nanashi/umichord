@@ -1,0 +1,61 @@
+# 「クモヒトデのうまる砂の上で」
+# 作詞、作曲：海茶
+#
+# YouTube： https://youtu.be/dPQRX8V0QvQ
+# ニコニコ： https://www.nicovideo.jp/watch/sm41189586
+
+!key D
+!bar 1/2 144 4/4
+# Chorus #0
+4M7 37 6m7 5m7
+4M7 37 [6m7 1/6- 1/5 1/5-]:2,
+4M7 37 6m7 5m7
+4M7 37 67sus4 6aug8,
+4M7 37 6m7 5m7
+4M7 37 6m7 1aug8,
+4M7 37 6m7 5m7
+4M7 37 67sus4 6m7.
+
+# Interlude
+4M7
+3m7,
+4M7
+6m 1,,
+# Verse #1
+4M7 57 3m 6m7
+4M7 57 3m 6m7,
+4M7 57 3aug8 6m7
+4M7 5sus4 6m7:2,,
+# Bridge #1
+4M7
+3m7:2 57 6-dim7,
+4M7 57 3m7 67
+2m7:2 37 6-aug8,,
+# Chorus #1
+4M7 37 6m7 5m7
+4M7 37 [6m7 1/6- 1/5 1/5-]:2,
+4M7 37 6m7 5m7
+4M7 37 67sus4 6aug8,
+4M7 37 6m7 5m7
+4M7 37 6m7 1aug8,
+4M7 37 6m7 5m7
+4M7 37 67sus4 6m7.
+
+# Bridge #2
+4M7 37 6m7 5m7
+~ 6aug8
+# Chorus #2
+4M7 37 6m7 5m7
+4M7 37 [6m7 1/6- 1/5 1/5-]:2,
+4M7 37 6m7 5m7
+4M7 37 67sus4 6aug8,
+4M7 37 6m7 5m7
+4M7 37 6m7 1aug8,
+4M7 37 6m7 5m7
+4 5 67sus4 6m7.
+
+# Outro
+4M7
+3m7,
+4M7
+6m 6m7..
