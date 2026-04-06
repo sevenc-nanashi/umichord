@@ -1,7 +1,17 @@
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { ParseError, parseScore } from "../parser";
+import syntaxDemo from "../assets/demos/syntax.txt?raw";
 
-export const scoreText = ref("");
+const scoreStorageKey = "umichord:score-text";
+
+function loadScoreText() {
+  if (typeof localStorage === "undefined") {
+    return syntaxDemo;
+  }
+  return localStorage.getItem(scoreStorageKey) ?? syntaxDemo;
+}
+
+export const scoreText = ref(loadScoreText());
 export const renderError = ref<Error | null>(null);
 
 const parseResult = computed(() => {
@@ -17,3 +27,10 @@ const parseResult = computed(() => {
 
 export const parsedScore = computed(() => parseResult.value.score);
 export const parseError = computed(() => parseResult.value.error);
+
+watch(scoreText, (text) => {
+  if (typeof localStorage === "undefined") {
+    return;
+  }
+  localStorage.setItem(scoreStorageKey, text);
+});

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useTemplateRef } from "vue";
+import { onMounted, useTemplateRef } from "vue";
 import Logo from "~icons/svg/logo.svg";
 
+const aboutShownStorageKey = "umichord:about-shown";
 const aboutDialog = useTemplateRef("aboutDialog");
 
 function openAboutDialog() {
@@ -11,6 +12,17 @@ function openAboutDialog() {
 function closeAboutDialog() {
   aboutDialog.value?.close();
 }
+
+onMounted(() => {
+  if (typeof localStorage === "undefined") {
+    return;
+  }
+  if (localStorage.getItem(aboutShownStorageKey) !== null) {
+    return;
+  }
+  openAboutDialog();
+  localStorage.setItem(aboutShownStorageKey, "1");
+});
 </script>
 <template>
   <header un-bg="primary" un-p="2" un-flex="~ items-center justify-between gap-4">
