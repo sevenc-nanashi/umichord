@@ -4,6 +4,7 @@ import { onMounted, onUnmounted, useTemplateRef, watch } from "vue";
 import { LANGUAGE_ID, monarchTokens, themeData } from "../lib/monacoLanguage";
 import { parseError, renderError, scoreText } from "../stores/score";
 import syntaxDemo from "../assets/demos/syntax.txt?raw";
+import kumohitodeDemo from "../assets/demos/kumohitode.txt?raw";
 import kotoDemo from "../assets/demos/koto.txt?raw";
 
 // Monaco は Web Worker を必要とするが、構文ハイライトのみの用途なのでスタブを使用
@@ -108,7 +109,11 @@ const demos = [
     text: syntaxDemo,
   },
   {
-    name: "「六時、言の葉の木の下で。」 / 名無し。",
+    name: "クモヒトデのうまる砂の上で / 海茶",
+    text: kumohitodeDemo,
+  },
+  {
+    name: "六時、言の葉の木の下で。 / 名無し。",
     text: kotoDemo,
   },
 ];

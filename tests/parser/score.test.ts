@@ -231,6 +231,11 @@ describe("parseScore", () => {
       const bar = punctuations.find((p) => p.type === "bar");
       expect(bar).toMatchObject({ tempo: 120, timeSignature: [4, 4] });
     });
+    test("!note text → { type: 'note', text }", () => {
+      const { punctuations } = parseScore("!note intro memo\n1 ;");
+      const note = punctuations.find((p) => p.type === "note");
+      expect(note).toMatchObject({ type: "note", text: "intro memo", row: 0 });
+    });
     test("!gradualTempoChange 1/2 1/2 up", () => {
       const { punctuations } = parseScore("!gradualTempoChange 1/2 1/2 up\n1");
       const g = punctuations.find((p) => p.type === "gradualTempoChange");
@@ -252,6 +257,11 @@ describe("parseScore", () => {
       if (bar && "row" in bar) {
         expect(bar.row).toBe(1);
       }
+    });
+    test("!note は次のコード行の row に対応する", () => {
+      const { punctuations } = parseScore("1\n!note verse a\n2 ;");
+      const note = punctuations.find((p) => p.type === "note");
+      expect(note).toMatchObject({ row: 1, text: "verse a" });
     });
   });
 

@@ -3,6 +3,7 @@ import {
   gap,
   paddingLeft,
   paddingRight,
+  paddingTop,
   width,
   type Length,
   type Position,
@@ -14,7 +15,12 @@ import type { RowLayout } from "./index.ts";
 const dotsDistance = dotRadius * 4;
 const barHeight = dotRadius * 4;
 const barTextSize = dotRadius * 4;
-const barTextTopPadding = dotRadius;
+const barTextTopPadding = dotRadius * 2;
+const noteTextSize = dotRadius * 4;
+const noteTopPadding = dotRadius * 2;
+const noteRowTopOffset = paddingTop;
+const noteLeftPadding = dotRadius * 2;
+const noteTextColor = "#6b7280";
 const gradualTempoChangeTipSize = dotRadius * 4;
 const gradualTempoChangePadding = dotRadius;
 const barVerticalOffset = dotRadius * 2;
@@ -40,6 +46,11 @@ export type Punctuation =
       length: Length;
       tempo?: number;
       timeSignature?: [numerator: number, denominator: number];
+    }
+  | {
+      type: "note";
+      row: number;
+      text: string;
     }
   | {
       type: "gradualTempoChange";
@@ -80,6 +91,9 @@ export function renderPunctuation(
   switch (p.type) {
     case "key":
       renderKey(canvas, p, layout);
+      break;
+    case "note":
+      renderNote(canvas, p, layout);
       break;
     case "majorSection":
       renderMajorSection(canvas, p, layout);
@@ -178,6 +192,11 @@ export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): Ve
       return {
         minY: getBarBottomY(layout) - (barTextSize + barHeight + barTextTopPadding),
         maxY: getBarBottomY(layout),
+      };
+    case "note":
+      return {
+        minY: layout.chordTopY - (noteTextSize + noteTopPadding + noteRowTopOffset),
+        maxY: layout.chordTopY - noteRowTopOffset,
       };
     case "gradualTempoChange":
       return {
@@ -335,6 +354,20 @@ function renderBar(
     canvas.fillText(text, barLeft, barBottomY - barHeight);
   }
 }
+
+function renderNote(
+  canvas: CanvasRenderingContext2D,
+  p: Extract<Punctuation, { type: "note" }>,
+  layout: RowLayout,
+) {
+  const previousFillStyle = canvas.fillStyle;
+  canvas.fillStyle = noteTextColor;
+  canvas.font = `${noteTextSize}px sans-serif`;
+  canvas.textAlign = "left";
+  canvas.fillText(p.text, noteLeftPadding, layout.chordTopY - (noteTopPadding + noteRowTopOffset));
+  canvas.fillStyle = previousFillStyle;
+}
+
 function renderGradualTempoChange(
   canvas: CanvasRenderingContext2D,
   p: Extract<Punctuation, { type: "gradualTempoChange" }>,

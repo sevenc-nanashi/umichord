@@ -97,4 +97,13 @@ describe("row layout", () => {
     expect(layouts[0]!.height).toBeGreaterThan(rowHeight);
     expect(layouts[0]!.cropHeight).toBeGreaterThan(minCropRowHeight);
   });
+
+  test("note がある行でもレイアウト計算できる", () => {
+    const { chords, punctuations } = parseScore("!note memo\n1 ;");
+    const layouts = computeRowLayouts(chords, punctuations);
+
+    expect(layouts).toHaveLength(1);
+    expect(layouts[0]!.contentTopY).toBeLessThanOrEqual(layouts[0]!.chordTopY);
+    expect(layouts[0]!.contentBottomY).toBeGreaterThanOrEqual(layouts[0]!.chordBottomY);
+  });
 });

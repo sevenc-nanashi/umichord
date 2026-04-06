@@ -29,6 +29,8 @@ const directives: [RegExp, string[]][] = [
   ],
   // !bar length
   [/^(!)(bar)(\s+\d+\/\d+)$/, ["directive.excl", "directive.name", "fraction"]],
+  // !note text
+  [/^(!)(note)(\s+.*)$/, ["directive.excl", "directive.name", "directive.text"]],
   // 不明な指示 or 引数が足りない場合のフォールバック
   [/^(!)(\S*)/, ["directive.excl", "directive.name"]],
 ];
@@ -206,6 +208,7 @@ export const themeData: Monaco.editor.IStandaloneThemeData = {
     { token: "directive.excl", foreground: "3a7fcc", fontStyle: "bold" },
     { token: "directive.name", foreground: "3a7fcc", fontStyle: "bold" },
     { token: "directive.dir", foreground: "7b6aa0" },
+    { token: "directive.text", foreground: "888888", fontStyle: "italic" },
     { token: "keyname", foreground: "c0415f" },
     { token: "fraction", foreground: "888888" },
     { token: "tempo", foreground: "888888" },

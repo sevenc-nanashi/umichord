@@ -282,6 +282,18 @@ export function parseScore(text: string): { chords: Chord[]; punctuations: Punct
             });
             break;
           }
+          case "note": {
+            const text = line.slice("!note".length + 1).trim();
+            if (text.length === 0) {
+              throw new ParseError("!note requires text");
+            }
+            punctuations.push({
+              type: "note",
+              row: currentRow,
+              text,
+            });
+            break;
+          }
           case "gradualTempoChange": {
             const [startNum, startDen] = parseFraction(parts[1]);
             const [lenNum, lenDen] = parseFraction(parts[2]);
