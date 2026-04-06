@@ -2,7 +2,7 @@
 import * as monaco from "monaco-editor";
 import { onMounted, onUnmounted, useTemplateRef, watch } from "vue";
 import { LANGUAGE_ID, monarchTokens, themeData } from "../lib/monacoLanguage";
-import { parseError, scoreText } from "../stores/score";
+import { parseError, renderError, scoreText } from "../stores/score";
 import syntaxDemo from "../assets/demos/syntax.txt?raw";
 import kotoDemo from "../assets/demos/koto.txt?raw";
 
@@ -61,16 +61,21 @@ onMounted(() => {
   );
 
   const stopErrorWatch = watch(
-    parseError,
-    (error) => {
+    [parseError, renderError],
+    ([currentParseError, currentRenderError]) => {
       const model = editor?.getModel();
       if (!model) return;
+      const error = currentParseError ?? currentRenderError;
       if (error) {
-        const lineNumber = error.line ?? 1;
+        const lineNumber = Math.min(
+          "line" in error && typeof error.line === "number" ? error.line : 1,
+          model.getLineCount(),
+        );
+        const message = currentParseError === null ? `描画エラー: ${error.message}` : error.message;
         monaco.editor.setModelMarkers(model, LANGUAGE_ID, [
           {
             severity: monaco.MarkerSeverity.Error,
-            message: error.message,
+            message,
             startLineNumber: lineNumber,
             startColumn: 1,
             endLineNumber: lineNumber,
@@ -110,8 +115,7 @@ const demos = [
 </script>
 
 <template>
-  <div un-h="[calc(100vh_-_4rem)]" un-border="l-1 primary" un-grid="~ rows-[auto_auto_1fr]">
-    <div un-p="4">TODO: 説明いろいろ</div>
+  <div un-h="[calc(100vh_-_4rem)]" un-border="l-1 primary" un-grid="~ rows-[auto_1fr]">
     <div un-p="4" un-border="t-1 primary">
       <h2 un-text="lg">サンプル</h2>
       <ul un-list="disc inside">

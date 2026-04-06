@@ -1,11 +1,23 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, watchEffect } from "vue";
 import * as renderer from "../renderer/index.ts";
-import { parsedScore } from "../stores/score";
+import { parsedScore, renderError } from "../stores/score";
 
-const renderedSvg = computed(() => {
+const renderedSvg = ref("");
+
+watchEffect(() => {
   const { chords, punctuations } = parsedScore.value;
-  return renderer.renderToSvg(chords, punctuations);
+  try {
+    renderedSvg.value = renderer.renderToSvg(chords, punctuations);
+    renderError.value = null;
+  } catch (error) {
+    renderedSvg.value = "";
+    if (error instanceof Error) {
+      renderError.value = error;
+      return;
+    }
+    renderError.value = new Error("Unknown render error");
+  }
 });
 </script>
 

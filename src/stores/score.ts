@@ -2,6 +2,7 @@ import { computed, ref } from "vue";
 import { ParseError, parseScore } from "../parser";
 
 export const scoreText = ref("");
+export const renderError = ref<Error | null>(null);
 
 const parseResult = computed(() => {
   try {
