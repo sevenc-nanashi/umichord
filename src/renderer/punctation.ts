@@ -12,6 +12,7 @@ import { ExhaustiveError } from "../lib/error.ts";
 import { Fraction, lerp } from "../lib/math.ts";
 import type { RowLayout } from "./index.ts";
 
+const fontFamily = "'M PLUS 1p', sans-serif";
 const dotsDistance = dotRadius * 4;
 const barHeight = dotRadius * 4;
 const barTextSize = dotRadius * 4;
@@ -480,7 +481,7 @@ function renderBar(
   const text =
     `${p.tempo ?? ""} ${p.timeSignature ? `${p.timeSignature[0]}/${p.timeSignature[1]}` : ""}`.trim();
   if (text) {
-    canvas.font = `${barTextSize}px sans-serif`;
+    canvas.font = `${barTextSize}px ${fontFamily}`;
     canvas.textAlign = "left";
     canvas.textBaseline = "top";
     canvas.fillText(text, barLeft, barBottomY - barHeight - barTextSize - barTextTopPadding);
@@ -498,7 +499,7 @@ function renderNote(
   }
   const previousFillStyle = canvas.fillStyle;
   canvas.fillStyle = noteTextColor;
-  canvas.font = `${noteTextSize}px sans-serif`;
+  canvas.font = `${noteTextSize}px ${fontFamily}`;
   canvas.textAlign = "left";
   canvas.textBaseline = "top";
   canvas.fillText(p.text, noteLeftPadding, bounds.minY);

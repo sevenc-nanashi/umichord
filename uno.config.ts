@@ -23,6 +23,9 @@ export default defineConfig<PresetWind4Theme>({
       "primary-dark": "#c67285",
       secondary: "#9687b2",
     },
+    font: {
+      sans: "'M PLUS 1p'",
+    },
   },
   // content: {
   //   filesystem: ["./**/*.vue"],

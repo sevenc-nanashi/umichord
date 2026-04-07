@@ -16,6 +16,7 @@
     "vue": "^3.5.30"
   },
   "devDependencies": {
+    "@fontsource/m-plus-1p": "^5.2.9",
     "@vitejs/plugin-vue": "^6.0.5",
     "@vizejs/vite-plugin": "^0.37.0",
     "typescript": "~5.9.3",

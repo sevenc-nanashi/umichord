@@ -22,6 +22,9 @@ importers:
         specifier: ^3.5.30
         version: 3.5.30(typescript@5.9.3)
     devDependencies:
+      '@fontsource/m-plus-1p':
+        specifier: ^5.2.9
+        version: 5.2.9
       '@vitejs/plugin-vue':
         specifier: ^6.0.5
         version: 6.0.5(@voidzero-dev/vite-plus-core@0.1.13(jiti@2.6.1)(typescript@5.9.3))(vue@3.5.30(typescript@5.9.3))
@@ -74,6 +77,9 @@ packages:
 
   '@emnapi/wasi-threads@1.2.0':
     resolution: {integrity: sha512-N10dEJNSsUx41Z6pZsXU8FjPjpBEplgH24sfkmITrBED1/U2Esum9F3lfLrMjKHHjmi557zQn7kR9R+XWXu5Rg==}
+
+  '@fontsource/m-plus-1p@5.2.9':
+    resolution: {integrity: sha512-SdstxK+xoUHmSkbmYTnPRWZWEfuQax6ZR0XbFhU82z5GA4X/YRE+VX54q0aDRJ5btej/fvFtww3qHFvp9A06GQ==}
 
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
@@ -1285,6 +1291,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
     optional: true
+
+  '@fontsource/m-plus-1p@5.2.9': {}
 
   '@iconify/types@2.0.0': {}
 
