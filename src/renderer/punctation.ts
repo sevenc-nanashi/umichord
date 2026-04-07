@@ -351,7 +351,7 @@ function renderBar(
     canvas.font = `${barTextSize}px sans-serif`;
     canvas.textAlign = "left";
     canvas.textBaseline = "top";
-    canvas.fillText(text, barLeft, barBottomY - barHeight);
+    canvas.fillText(text, barLeft, barBottomY - barHeight - barTextSize - barTextTopPadding);
   }
 }
 
@@ -364,7 +364,12 @@ function renderNote(
   canvas.fillStyle = noteTextColor;
   canvas.font = `${noteTextSize}px sans-serif`;
   canvas.textAlign = "left";
-  canvas.fillText(p.text, noteLeftPadding, layout.chordTopY - (noteTopPadding + noteRowTopOffset));
+  canvas.textBaseline = "top";
+  canvas.fillText(
+    p.text,
+    noteLeftPadding,
+    layout.chordTopY - noteTextSize - noteTopPadding - noteRowTopOffset,
+  );
   canvas.fillStyle = previousFillStyle;
 }
 
