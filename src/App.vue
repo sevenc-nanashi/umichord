@@ -2,8 +2,10 @@
 import Header from "./components/Header.vue";
 import Renderer from "./components/Renderer.vue";
 import Editor from "./components/Editor.vue";
+import MobileWarning from "./components/MobileWarning.vue";
 </script>
 <template>
+  <MobileWarning />
   <div class="app">
     <Header un-grid-area="header" un-h="[4rem]" />
     <section un-grid-area="renderer"><Renderer /></section>
