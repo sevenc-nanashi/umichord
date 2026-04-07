@@ -106,4 +106,44 @@ describe("row layout", () => {
     expect(layouts[0]!.contentTopY).toBeLessThanOrEqual(layouts[0]!.chordTopY);
     expect(layouts[0]!.contentBottomY).toBeGreaterThanOrEqual(layouts[0]!.chordBottomY);
   });
+
+  test("bar と note が同居すると単体よりさらに上方向の余白が増える", () => {
+    const noteOnly = parseScore("!note memo\n1");
+    const barOnly = parseScore("!bar 1/1\n1");
+    const noteAndBar = parseScore("!bar 1/1\n!note memo\n1");
+
+    const noteOnlyLayout = computeRowLayouts(noteOnly.chords, noteOnly.punctuations)[0]!;
+    const barOnlyLayout = computeRowLayouts(barOnly.chords, barOnly.punctuations)[0]!;
+    const noteAndBarLayout = computeRowLayouts(noteAndBar.chords, noteAndBar.punctuations)[0]!;
+
+    expect(noteAndBarLayout.baselineY).toBe(noteOnlyLayout.baselineY);
+    expect(noteAndBarLayout.baselineY).toBeGreaterThan(barOnlyLayout.baselineY);
+    expect(noteAndBarLayout.chordTopY).toBe(noteOnlyLayout.chordTopY);
+    expect(noteAndBarLayout.chordTopY).toBeGreaterThan(barOnlyLayout.chordTopY);
+  });
+
+  test("bar と gradualTempoChange は同じ帯に重なり追加の上余白を生まない", () => {
+    const barOnly = parseScore("!bar 1/1\n1");
+    const barAndGradual = parseScore("!bar 1/1\n!gradualTempoChange 0/1 1/1 up\n1");
+
+    const barOnlyLayout = computeRowLayouts(barOnly.chords, barOnly.punctuations)[0]!;
+    const barAndGradualLayout = computeRowLayouts(
+      barAndGradual.chords,
+      barAndGradual.punctuations,
+    )[0]!;
+
+    expect(barAndGradualLayout.baselineY).toBe(barOnlyLayout.baselineY);
+    expect(barAndGradualLayout.chordTopY).toBe(barOnlyLayout.chordTopY);
+  });
+
+  test("note -> bar -> note は note が2段積まれた分だけ上方向の余白が増える", () => {
+    const noteAndBar = parseScore("!note first\n!bar 1/1\n1");
+    const noteBarNote = parseScore("!note first\n!bar 1/1\n!note second\n1");
+
+    const noteAndBarLayout = computeRowLayouts(noteAndBar.chords, noteAndBar.punctuations)[0]!;
+    const noteBarNoteLayout = computeRowLayouts(noteBarNote.chords, noteBarNote.punctuations)[0]!;
+
+    expect(noteBarNoteLayout.baselineY).toBeGreaterThan(noteAndBarLayout.baselineY);
+    expect(noteBarNoteLayout.chordTopY).toBeGreaterThan(noteAndBarLayout.chordTopY);
+  });
 });

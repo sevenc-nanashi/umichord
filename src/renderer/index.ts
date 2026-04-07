@@ -3,7 +3,12 @@
 
 import { minCropRowHeight, paddingTop, rowBottomPadding, rowHeight, width } from "./base";
 import { getChordBounds, getChordRightEdgeY, renderChord, type Chord } from "./chord";
-import { getPunctuationBounds, renderPunctuation, type Punctuation } from "./punctation";
+import {
+  getPositionedPunctuations,
+  getPositionedPunctuationsInRenderOrder,
+  renderPunctuation,
+  type Punctuation,
+} from "./punctation";
 import { Context } from "svgcanvas";
 
 export { width, rowHeight } from "./base.ts";
@@ -37,7 +42,7 @@ function getPunctuationRowTopExpansion(punctations: Punctuation[], layout: RowLa
   }
 
   const minPunctuationY = Math.min(
-    ...punctations.map((punctation) => getPunctuationBounds(punctation, layout).minY),
+    ...getPositionedPunctuations(punctations, layout).map((positioned) => positioned.bounds.minY),
   );
   return Math.max(0, -minPunctuationY);
 }
@@ -157,9 +162,12 @@ export function render(
       renderChord(canvas, chord);
     }
     canvas.restore();
-    for (const punctation of punctationsInRow) {
+    const positionedPunctuations = getPositionedPunctuationsInRenderOrder(
+      getPositionedPunctuations(punctationsInRow, layout),
+    );
+    for (const positioned of positionedPunctuations) {
       canvas.save();
-      renderPunctuation(canvas, punctation, layout);
+      renderPunctuation(canvas, positioned.punctuation, layout, positioned.bounds);
       canvas.restore();
     }
     canvas.restore();
@@ -195,7 +203,11 @@ function getActualContentTopY(chords: Chord[], punctations: Punctuation[], layou
   const punctuationTopY =
     punctations.length === 0
       ? Number.POSITIVE_INFINITY
-      : Math.min(...punctations.map((punctation) => getPunctuationBounds(punctation, layout).minY));
+      : Math.min(
+          ...getPositionedPunctuations(punctations, layout).map(
+            (positioned) => positioned.bounds.minY,
+          ),
+        );
 
   return Math.max(0, Math.min(chordTopY, punctuationTopY));
 }
@@ -214,7 +226,11 @@ function getActualContentBottomY(
   const punctuationBottomY =
     punctations.length === 0
       ? Number.NEGATIVE_INFINITY
-      : Math.max(...punctations.map((punctation) => getPunctuationBounds(punctation, layout).maxY));
+      : Math.max(
+          ...getPositionedPunctuations(punctations, layout).map(
+            (positioned) => positioned.bounds.maxY,
+          ),
+        );
 
   return Math.min(layout.height, Math.max(chordBottomY, punctuationBottomY));
 }

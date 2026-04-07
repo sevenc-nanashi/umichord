@@ -87,13 +87,14 @@ export function renderPunctuation(
   canvas: CanvasRenderingContext2D,
   p: Punctuation,
   layout: RowLayout,
+  bounds?: VerticalBounds,
 ) {
   switch (p.type) {
     case "key":
       renderKey(canvas, p, layout);
       break;
     case "note":
-      renderNote(canvas, p, layout);
+      renderNote(canvas, p, layout, bounds);
       break;
     case "majorSection":
       renderMajorSection(canvas, p, layout);
@@ -114,10 +115,10 @@ export function renderPunctuation(
       renderSongEnd(canvas, p, layout);
       break;
     case "bar":
-      renderBar(canvas, p, layout);
+      renderBar(canvas, p, layout, bounds);
       break;
     case "gradualTempoChange":
-      renderGradualTempoChange(canvas, p, layout);
+      renderGradualTempoChange(canvas, p, layout, bounds);
       break;
     default:
       throw new ExhaustiveError(p);
@@ -127,6 +128,11 @@ export function renderPunctuation(
 export type VerticalBounds = {
   minY: number;
   maxY: number;
+};
+
+export type PositionedPunctuation = {
+  punctuation: Punctuation;
+  bounds: VerticalBounds;
 };
 
 type VerticalLayout = Pick<
@@ -147,10 +153,28 @@ function getGradualTempoChangeLineY(layout: VerticalLayout) {
   return getBarBottomY(layout) - gradualTempoChangeTipSize;
 }
 
+function getNoteTopAnchorY(layout: VerticalLayout) {
+  return layout.chordTopY - noteRowTopOffset;
+}
+
+function getNoteBounds(topAnchorY: number): VerticalBounds {
+  return {
+    minY: topAnchorY - (noteTextSize + noteTopPadding),
+    maxY: topAnchorY,
+  };
+}
+
+function offsetBounds(bounds: VerticalBounds, deltaY: number): VerticalBounds {
+  return {
+    minY: bounds.minY + deltaY,
+    maxY: bounds.maxY + deltaY,
+  };
+}
+
 function computeSymbolY(layout: Pick<RowLayout, "baselineY" | "chordEndY">) {
   return lerp(layout.baselineY, layout.chordEndY, 0.25);
 }
-export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): VerticalBounds {
+function getStaticPunctuationBounds(p: Punctuation, layout: VerticalLayout): VerticalBounds {
   switch (p.type) {
     case "key": {
       const keyBaseY = layout.chordCenterY;
@@ -193,19 +217,125 @@ export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): Ve
         minY: getBarBottomY(layout) - (barTextSize + barHeight + barTextTopPadding),
         maxY: getBarBottomY(layout),
       };
-    case "note":
-      return {
-        minY: layout.chordTopY - (noteTextSize + noteTopPadding + noteRowTopOffset),
-        maxY: layout.chordTopY - noteRowTopOffset,
-      };
     case "gradualTempoChange":
       return {
         minY: getGradualTempoChangeLineY(layout) - barTextSize,
         maxY: getGradualTempoChangeLineY(layout) + gradualTempoChangeTipSize,
       };
+    case "note":
+      return getNoteBounds(getNoteTopAnchorY(layout));
     default:
       throw new ExhaustiveError(p);
   }
+}
+
+function getPunctuationRenderPriority(p: Punctuation) {
+  switch (p.type) {
+    case "note":
+      return 0;
+    case "bar":
+      return 1;
+    case "gradualTempoChange":
+      return 2;
+    default:
+      return 3;
+  }
+}
+
+function isUpwardStackedPunctuation(punctuation: Punctuation) {
+  return (
+    punctuation.type === "note" ||
+    punctuation.type === "bar" ||
+    punctuation.type === "gradualTempoChange"
+  );
+}
+
+export function getPositionedPunctuationsInRenderOrder(punctuations: PositionedPunctuation[]) {
+  return punctuations;
+}
+
+export function getPositionedPunctuations(
+  punctuations: Punctuation[],
+  layout: VerticalLayout,
+): PositionedPunctuation[] {
+  const positioned: PositionedPunctuation[] = [];
+  let currentTopY = getNoteTopAnchorY(layout);
+  let punctuationIndex = 0;
+
+  while (punctuationIndex < punctuations.length) {
+    const punctuation = punctuations[punctuationIndex]!;
+
+    if (!isUpwardStackedPunctuation(punctuation)) {
+      const bounds = getStaticPunctuationBounds(punctuation, layout);
+      currentTopY = Math.min(currentTopY, bounds.minY);
+      positioned.push({
+        punctuation,
+        bounds,
+      });
+      punctuationIndex += 1;
+      continue;
+    }
+
+    const group: Punctuation[] = [];
+    while (
+      punctuationIndex < punctuations.length &&
+      isUpwardStackedPunctuation(punctuations[punctuationIndex]!)
+    ) {
+      group.push(punctuations[punctuationIndex]!);
+      punctuationIndex += 1;
+    }
+
+    const normalizedGroup = group
+      .map((item, index) => ({ item, index }))
+      .sort((left, right) => {
+        const priorityDelta =
+          getPunctuationRenderPriority(left.item) - getPunctuationRenderPriority(right.item);
+        if (priorityDelta !== 0) {
+          return priorityDelta;
+        }
+        return left.index - right.index;
+      })
+      .map(({ item }) => item);
+
+    let groupTopY = currentTopY;
+    let groupMinY = currentTopY;
+    const groupBaseY = currentTopY;
+    const groupHasNote = normalizedGroup.some(
+      (groupPunctuation) => groupPunctuation.type === "note",
+    );
+
+    for (const groupPunctuation of normalizedGroup) {
+      let bounds: VerticalBounds;
+      if (groupPunctuation.type === "note") {
+        bounds = getNoteBounds(groupTopY);
+      } else {
+        const staticBounds = getStaticPunctuationBounds(groupPunctuation, layout);
+        bounds = groupHasNote
+          ? offsetBounds(staticBounds, groupBaseY - staticBounds.minY)
+          : staticBounds;
+      }
+      if (groupPunctuation.type === "note") {
+        groupTopY = bounds.minY;
+      }
+      groupMinY = Math.min(groupMinY, bounds.minY);
+      positioned.push({
+        punctuation: groupPunctuation,
+        bounds,
+      });
+    }
+
+    currentTopY = groupMinY;
+  }
+
+  return positioned;
+}
+
+export function getPunctuationBounds(p: Punctuation, layout: VerticalLayout): VerticalBounds {
+  const positioned = getPositionedPunctuations([p], layout)[0];
+  if (positioned === undefined) {
+    throw new Error("Punctuation is required");
+  }
+  return positioned.bounds;
 }
 function renderKey(
   canvas: CanvasRenderingContext2D,
@@ -334,8 +464,10 @@ function renderBar(
   canvas: CanvasRenderingContext2D,
   p: Extract<Punctuation, { type: "bar" }>,
   layout: RowLayout,
+  bounds?: VerticalBounds,
 ) {
-  const barBottomY = getBarBottomY(layout);
+  const staticBounds = getStaticPunctuationBounds(p, layout);
+  const barBottomY = (bounds ?? staticBounds).maxY;
   const positionRight = new Fraction(p.length[0], p.length[1]);
   const barLeft = paddingLeft + gap;
   const barRight = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
@@ -358,18 +490,18 @@ function renderBar(
 function renderNote(
   canvas: CanvasRenderingContext2D,
   p: Extract<Punctuation, { type: "note" }>,
-  layout: RowLayout,
+  _layout: RowLayout,
+  bounds?: VerticalBounds,
 ) {
+  if (bounds === undefined) {
+    throw new Error("Note bounds are required");
+  }
   const previousFillStyle = canvas.fillStyle;
   canvas.fillStyle = noteTextColor;
   canvas.font = `${noteTextSize}px sans-serif`;
   canvas.textAlign = "left";
   canvas.textBaseline = "top";
-  canvas.fillText(
-    p.text,
-    noteLeftPadding,
-    layout.chordTopY - noteTextSize - noteTopPadding - noteRowTopOffset,
-  );
+  canvas.fillText(p.text, noteLeftPadding, bounds.minY);
   canvas.fillStyle = previousFillStyle;
 }
 
@@ -377,6 +509,7 @@ function renderGradualTempoChange(
   canvas: CanvasRenderingContext2D,
   p: Extract<Punctuation, { type: "gradualTempoChange" }>,
   layout: RowLayout,
+  bounds?: VerticalBounds,
 ) {
   const positionLeft = new Fraction(p.position[1], p.position[2]);
   const positionRight = positionLeft.add(new Fraction(p.length[0], p.length[1]));
@@ -384,7 +517,9 @@ function renderGradualTempoChange(
   const barLeft = lerp(paddingLeft + gap, width - paddingRight - gap, positionLeft.toNumber());
   const barRight = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
   const barCenter = (barLeft + barRight) / 2;
-  const lineY = getGradualTempoChangeLineY(layout);
+  const staticBounds = getStaticPunctuationBounds(p, layout);
+  const lineY =
+    getGradualTempoChangeLineY(layout) + ((bounds ?? staticBounds).minY - staticBounds.minY);
 
   canvas.beginPath();
   canvas.moveTo(barLeft, lineY);
