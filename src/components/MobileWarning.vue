@@ -5,7 +5,7 @@ const dismissed = ref(false);
 const mobileDialog = useTemplateRef<HTMLDialogElement>("mobileDialog");
 onMounted(() => {
   dismissed.value = localStorage.getItem("umichord:mobile-warning-dismissed") !== null;
-  if (!dismissed.value && mobileDialog.value) {
+  if (!dismissed.value && mobileDialog.value && window.innerWidth < 768) {
     mobileDialog.value.showModal();
   }
 });
