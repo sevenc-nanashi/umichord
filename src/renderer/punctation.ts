@@ -502,7 +502,7 @@ function renderNote(
   canvas.font = `${noteTextSize}px ${fontFamily}`;
   canvas.textAlign = "left";
   canvas.textBaseline = "top";
-  canvas.fillText(p.text, noteLeftPadding, bounds.minY);
+  canvas.fillText(p.text, noteLeftPadding, bounds.minY + noteTopPadding);
   canvas.fillStyle = previousFillStyle;
 }
 

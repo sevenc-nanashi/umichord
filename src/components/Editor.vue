@@ -120,7 +120,7 @@ const demos = [
 </script>
 
 <template>
-  <div un-h="[calc(100vh_-_4rem)]" un-border="l-1 primary" un-grid="~ rows-[auto_1fr]">
+  <div un-h="full" un-border="l-1 primary" un-grid="~ rows-[auto_1fr]">
     <div un-p="4">
       <h2 un-text="lg">サンプル</h2>
       <ul un-list="disc inside">

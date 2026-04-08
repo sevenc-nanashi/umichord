@@ -34,7 +34,7 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div un-p="4" un-h="[calc(100vh_-_4rem)]" un-overflow-y="auto">
+  <div un-p="4" un-h="full" un-overflow-y="auto">
     <div
       class="renderer-output"
       :class="{ 'renderer-output-error': hasRenderError }"
@@ -54,5 +54,6 @@ watchEffect(() => {
   display: block;
   width: auto;
   height: auto;
+  margin: 0 auto;
 }
 </style>

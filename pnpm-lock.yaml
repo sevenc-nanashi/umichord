@@ -10,7 +10,7 @@ overrides:
 
 patchedDependencies:
   svgcanvas:
-    hash: ca57f019ea7c2bf4806e8f729c09f125a721f4cc5b51fc660e546e96cebe3861
+    hash: 88d389e5f13e5078aecfaeb35c58945a2ff6d26e97a8d4e9c248c4db700af7f0
     path: patches/svgcanvas.patch
 
 importers:
@@ -22,7 +22,7 @@ importers:
         version: 0.55.1
       svgcanvas:
         specifier: ^2.6.0
-        version: 2.6.0(patch_hash=ca57f019ea7c2bf4806e8f729c09f125a721f4cc5b51fc660e546e96cebe3861)
+        version: 2.6.0(patch_hash=88d389e5f13e5078aecfaeb35c58945a2ff6d26e97a8d4e9c248c4db700af7f0)
       vue:
         specifier: ^3.5.30
         version: 3.5.30(typescript@5.9.3)
@@ -2173,7 +2173,7 @@ snapshots:
 
   std-env@4.0.0: {}
 
-  svgcanvas@2.6.0(patch_hash=ca57f019ea7c2bf4806e8f729c09f125a721f4cc5b51fc660e546e96cebe3861): {}
+  svgcanvas@2.6.0(patch_hash=88d389e5f13e5078aecfaeb35c58945a2ff6d26e97a8d4e9c248c4db700af7f0): {}
 
   tinybench@2.9.0: {}
 

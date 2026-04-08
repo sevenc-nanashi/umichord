@@ -12,7 +12,7 @@ index e4b207f8d6a46a8b90c402879e5acde9865e33bc..e73a899950b430b364a4de4c7b6e94b9
      }
  
 diff --git a/dist/svgcanvas.js b/dist/svgcanvas.js
-index e723b421e65cfe4e1db5549e3de9006eac31a203..fa6b0653548cbfe46282f50b9b35628e91c10e88 100644
+index e723b421e65cfe4e1db5549e3de9006eac31a203..6f5eb633d35023b1a3e307b5179089bfc25d06fd 100644
 --- a/dist/svgcanvas.js
 +++ b/dist/svgcanvas.js
 @@ -168,7 +168,7 @@ var Context = (function () {
@@ -20,7 +20,7 @@ index e723b421e65cfe4e1db5549e3de9006eac31a203..fa6b0653548cbfe46282f50b9b35628e
      function getDominantBaseline(textBaseline) {
          //INFO: not supported in all browsers
 -        var mapping = {"alphabetic": "alphabetic", "hanging": "hanging", "top":"text-before-edge", "bottom":"text-after-edge", "middle":"central"};
-+        var mapping = {"alphabetic": "alphabetic", "hanging": "hanging", "top":"text-top", "bottom":"text-after-edge", "middle":"central"};
++        var mapping = {"alphabetic": "alphabetic", "hanging": "hanging", "top":"hanging", "bottom":"text-after-edge", "middle":"central"};
          return mapping[textBaseline] || mapping.alphabetic;
      }
  
