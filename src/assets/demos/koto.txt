@@ -5,7 +5,7 @@
 # ニコニコ： https://www.nicovideo.jp/watch/sm45977796
 
 !key D
-!bar 0/1 1/4 145 4/4
+!bar 0 1/4 145 4/4
 !note Piano Solo
 4M7 5(_=) 3m7 [1M7 6m7]
 4M7 5(_=) 3m7 ~,,

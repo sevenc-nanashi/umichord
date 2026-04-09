@@ -23,6 +23,13 @@ function parseFraction(s: string): [number, number] {
   return [parseInt(parts[0]), parseInt(parts[1])];
 }
 
+function parsePosition(s: string): [number, number] {
+  if (s === "0") {
+    return [0, 1];
+  }
+  return parseFraction(s);
+}
+
 const keyNameToSemitone: Record<string, number> = {
   C: 0,
   "C#": 1,
@@ -263,7 +270,7 @@ export function parseScore(text: string): { chords: Chord[]; punctuations: Punct
             if (parts.length < 3) {
               throw new ParseError("!bar requires position and length");
             }
-            const [startNum, startDen] = parseFraction(parts[1]);
+            const [startNum, startDen] = parsePosition(parts[1]);
             const [lenNum, lenDen] = parseFraction(parts[2]);
             let tempo: number | undefined;
             let timeSignature: [number, number] | undefined;
@@ -300,7 +307,7 @@ export function parseScore(text: string): { chords: Chord[]; punctuations: Punct
             break;
           }
           case "gradualTempoChange": {
-            const [startNum, startDen] = parseFraction(parts[1]);
+            const [startNum, startDen] = parsePosition(parts[1]);
             const [lenNum, lenDen] = parseFraction(parts[2]);
             const direction = parts[3] as "up" | "down";
             if (direction !== "up" && direction !== "down") {

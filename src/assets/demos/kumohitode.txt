@@ -5,7 +5,7 @@
 # ニコニコ： https://www.nicovideo.jp/watch/sm41189586
 
 !key D
-!bar 0/1 1/2 144 4/4
+!bar 0 1/2 144 4/4
 !note Chorus #0
 4M7 37 6m7 5m7
 4M7 37 [6m7 1/6- 1/5 1/5-]:2,

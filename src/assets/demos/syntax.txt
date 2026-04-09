@@ -102,18 +102,21 @@
 4 5 3m 6m
 
 !note 特殊指示：1小節の長さ、テンポ、拍子
-# 1小節の長さ、テンポ、拍子
-# 「!bar <開始点> <1小節の長さ> [テンポ] [拍子]」で指定します。
-!bar 0/1 1/2 143 4/4
+# 「!bar <開始点> <1小節の長さ> [テンポ] [拍子]」で1小節の長さ、テンポ、拍子を表します。
+!bar 0 1/2 143 4/4
 4M7 57 6m7/3 17
 
-!bar 0/1 1/4 3/4
+!bar 0 1/4 3/4
 4M7 57 3m7 6m7
 
 !note 特殊指示：テンポの推移
-# テンポの推移
-# 「!gradualTempoChagne <開始点> <長さ> <向き>」で指定します。
+# 「!gradualTempoChagne <開始点> <長さ> <向き>」でテンポの推移を表します。
 # 向きは「up」「down」のいずれかを指定します。
-!gradualTempoChange 0/1 1/2 up
-!gradualTempoChange 1/2 1/2 down
+!bar 0 1/2 150 4/4
+4M7 57 6m7:2
+!gradualTempoChange 0 1/2 up
+!bar 1/2 1/2 160
+4M7 57 6m7:2
+!gradualTempoChange 1/2 1/4 down
+!bar 3/4 1/4 150
 4M7 57 6m7:2

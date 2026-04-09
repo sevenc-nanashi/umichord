@@ -3,11 +3,13 @@ import type * as Monaco from "monaco-editor";
 export const LANGUAGE_ID = "umichord";
 
 const directives: [RegExp, string[]][] = [
-  // !gradualTempoChange start length up|down
+  // !gradualTempoChange start(0 shorthand allowed) length up|down
   [
-    /^(!)(gradualTempoChange)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+)(up|down)$/,
+    /^(!)(gradualTempoChange)(\s+(?:0|\d+\/\d+))(\s+\d+\/\d+)(\s+)(up|down)$/,
     ["directive.excl", "directive.name", "fraction", "fraction", "", "directive.dir"],
   ],
+  // !gradualTempoChange start length up|down
+  //
   // !keyChange prevKey newKey
   [
     /^(!)(keyChange)(\s+[A-G][#b]?)(\s+[A-G][#b]?)$/,
@@ -15,24 +17,24 @@ const directives: [RegExp, string[]][] = [
   ],
   // !key name
   [/^(!)(key)(\s+[A-G][#b]?)$/, ["directive.excl", "directive.name", "keyname"]],
-  // !bar position length tempo timeSig（全組み合わせ: 長いものから先）
+  // !bar position(0 shorthand allowed) length tempo timeSig（全組み合わせ: 長いものから先）
   [
-    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+\d+)(\s+\d+\/\d+)$/,
+    /^(!)(bar)(\s+(?:0|\d+\/\d+))(\s+\d+\/\d+)(\s+\d+)(\s+\d+\/\d+)$/,
     ["directive.excl", "directive.name", "fraction", "fraction", "tempo", "fraction"],
   ],
-  // !bar position length tempo
+  // !bar position(0 shorthand allowed) length tempo
   [
-    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+\d+)$/,
+    /^(!)(bar)(\s+(?:0|\d+\/\d+))(\s+\d+\/\d+)(\s+\d+)$/,
     ["directive.excl", "directive.name", "fraction", "fraction", "tempo"],
   ],
-  // !bar position length timeSig
+  // !bar position(0 shorthand allowed) length timeSig
   [
-    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+\d+\/\d+)$/,
+    /^(!)(bar)(\s+(?:0|\d+\/\d+))(\s+\d+\/\d+)(\s+\d+\/\d+)$/,
     ["directive.excl", "directive.name", "fraction", "fraction", "fraction"],
   ],
-  // !bar position length
+  // !bar position(0 shorthand allowed) length
   [
-    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)$/,
+    /^(!)(bar)(\s+(?:0|\d+\/\d+))(\s+\d+\/\d+)$/,
     ["directive.excl", "directive.name", "fraction", "fraction"],
   ],
   // !note text

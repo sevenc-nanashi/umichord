@@ -215,6 +215,11 @@ describe("parseScore", () => {
       const bar = punctuations.find((p) => p.type === "bar");
       expect(bar).toMatchObject({ type: "bar", position: [0, 0, 1], length: [1, 1] });
     });
+    test("!bar 0 1/1 → 0/1 と同じ位置", () => {
+      const { punctuations } = parseScore("!bar 0 1/1\n1");
+      const bar = punctuations.find((p) => p.type === "bar");
+      expect(bar).toMatchObject({ type: "bar", position: [0, 0, 1], length: [1, 1] });
+    });
     test("!bar 1/2 1/4 120 → tempo: 120", () => {
       const { punctuations } = parseScore("!bar 1/2 1/4 120\n1");
       const bar = punctuations.find((p) => p.type === "bar");
@@ -241,6 +246,7 @@ describe("parseScore", () => {
     test("!bar の引数不足と不正オプションはエラー", () => {
       expect(() => parseScore("!bar 1/1\n1")).toThrow();
       expect(() => parseScore("!bar 0/1 1/1 fast\n1")).toThrow();
+      expect(() => parseScore("!bar 1 1/1\n1")).toThrow();
     });
     test("!note text → { type: 'note', text }", () => {
       const { punctuations } = parseScore("!note intro memo\n1 ;");
@@ -261,6 +267,19 @@ describe("parseScore", () => {
       const { punctuations } = parseScore("!gradualTempoChange 0/1 1/1 down\n1");
       const g = punctuations.find((p) => p.type === "gradualTempoChange");
       expect(g).toMatchObject({ direction: "down" });
+    });
+    test("!gradualTempoChange 0 1/2 up → 0/1 と同じ位置", () => {
+      const { punctuations } = parseScore("!gradualTempoChange 0 1/2 up\n1");
+      const g = punctuations.find((p) => p.type === "gradualTempoChange");
+      expect(g).toMatchObject({
+        type: "gradualTempoChange",
+        position: [0, 0, 1],
+        length: [1, 2],
+        direction: "up",
+      });
+    });
+    test("!gradualTempoChange の start に 0 以外の整数は使えない", () => {
+      expect(() => parseScore("!gradualTempoChange 1 1/2 up\n1")).toThrow();
     });
     test("指示の row は次のコード行の row に対応する", () => {
       const { punctuations } = parseScore("1\n!bar 0/1 1/1\n2");

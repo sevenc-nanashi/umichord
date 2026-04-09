@@ -68,11 +68,11 @@ chord3| |  |  |  |--|--|--|
 `!`から始まる行は特殊指示になります。
 以下の指示が定義されています：
 
-- `!bar <position> <length> [tempo?] [timeSignature?]`：１小節がどこからどこまでかを指定します。positionからposition+lengthの区間が1小節になります。
-  - `tempo`はBPMを指定します。例えば、`!bar 0/1 1/1 120`は、横幅全体が120BPMの1小節であることを意味します。
-  - `timeSignature`は拍子を指定します。例えば、`!bar 0/1 1/1 4/4`は、横幅全体が4/4拍子の1小節であることを意味します。
+- `!bar <position> <length> [tempo?] [timeSignature?]`：１小節がどこからどこまでかを指定します。positionからposition+lengthの区間が1小節になります。`position` が `0/1` の場合は `0` と省略できます。
+  - `tempo`はBPMを指定します。例えば、`!bar 0 1/1 120`は、横幅全体が120BPMの1小節であることを意味します。
+  - `timeSignature`は拍子を指定します。例えば、`!bar 0 1/1 4/4`は、横幅全体が4/4拍子の1小節であることを意味します。
   - `!bar 1/2 1/2 120 4/4`のように同時に指定することもできます。
-- `!gradualTempoChange <start> <length> <direction>`：徐々にテンポを変化させることを指定します。startからstart+lengthの区間でテンポが変化します。directionは`up`か`down`で、テンポを上げるか下げるかを指定します。
+- `!gradualTempoChange <start> <length> <direction>`：徐々にテンポを変化させることを指定します。startからstart+lengthの区間でテンポが変化します。`start` が `0/1` の場合は `0` と省略できます。directionは`up`か`down`で、テンポを上げるか下げるかを指定します。
   - 例えば、`!gradualTempoChange 1/2 1/2 up`は、横幅の後半の1小節で徐々にテンポを上げることを意味します。
 - `!key <keySignature>`：調を指定します。例えば、`!key C#`は、C#が調であることを意味します。
 - `!keyChange <prevKey> <newKey>`：調の変更を指定します。prevKeyからnewKeyに変更します。例えば、`!keyChange C# D`は、C#からDに調が変わることを意味します。
