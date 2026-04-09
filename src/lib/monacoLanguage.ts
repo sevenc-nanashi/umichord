@@ -15,20 +15,26 @@ const directives: [RegExp, string[]][] = [
   ],
   // !key name
   [/^(!)(key)(\s+[A-G][#b]?)$/, ["directive.excl", "directive.name", "keyname"]],
-  // !bar length tempo timeSig（全組み合わせ: 長いものから先）
+  // !bar position length tempo timeSig（全組み合わせ: 長いものから先）
   [
-    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+)(\s+\d+\/\d+)$/,
-    ["directive.excl", "directive.name", "fraction", "tempo", "fraction"],
+    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+\d+)(\s+\d+\/\d+)$/,
+    ["directive.excl", "directive.name", "fraction", "fraction", "tempo", "fraction"],
   ],
-  // !bar length tempo
-  [/^(!)(bar)(\s+\d+\/\d+)(\s+\d+)$/, ["directive.excl", "directive.name", "fraction", "tempo"]],
-  // !bar length timeSig
+  // !bar position length tempo
+  [
+    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+\d+)$/,
+    ["directive.excl", "directive.name", "fraction", "fraction", "tempo"],
+  ],
+  // !bar position length timeSig
+  [
+    /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)(\s+\d+\/\d+)$/,
+    ["directive.excl", "directive.name", "fraction", "fraction", "fraction"],
+  ],
+  // !bar position length
   [
     /^(!)(bar)(\s+\d+\/\d+)(\s+\d+\/\d+)$/,
     ["directive.excl", "directive.name", "fraction", "fraction"],
   ],
-  // !bar length
-  [/^(!)(bar)(\s+\d+\/\d+)$/, ["directive.excl", "directive.name", "fraction"]],
   // !note text
   [/^(!)(note)(\s+.*)$/, ["directive.excl", "directive.name", "directive.text"]],
   // 不明な指示 or 引数が足りない場合のフォールバック

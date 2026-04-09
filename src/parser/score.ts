@@ -260,21 +260,27 @@ export function parseScore(text: string): { chords: Chord[]; punctuations: Punct
 
         switch (directive) {
           case "bar": {
-            const [lenNum, lenDen] = parseFraction(parts[1]);
+            if (parts.length < 3) {
+              throw new ParseError("!bar requires position and length");
+            }
+            const [startNum, startDen] = parseFraction(parts[1]);
+            const [lenNum, lenDen] = parseFraction(parts[2]);
             let tempo: number | undefined;
             let timeSignature: [number, number] | undefined;
-            for (let i = 2; i < parts.length; i++) {
+            for (let i = 3; i < parts.length; i++) {
               const p = parts[i];
               if (/^\d+\/\d+$/.test(p)) {
                 const [n, d] = parseFraction(p);
                 timeSignature = [n, d];
               } else if (/^\d+$/.test(p)) {
                 tempo = parseInt(p);
+              } else {
+                throw new ParseError(`Invalid !bar option: "${p}"`);
               }
             }
             punctuations.push({
               type: "bar",
-              row: currentRow,
+              position: [currentRow, startNum, startDen],
               length: [lenNum, lenDen],
               ...(tempo !== undefined ? { tempo } : {}),
               ...(timeSignature ? { timeSignature } : {}),

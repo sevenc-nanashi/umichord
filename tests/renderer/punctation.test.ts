@@ -8,7 +8,7 @@ import {
 
 describe("punctation layout", () => {
   test("bar と note は入力順に関係なく note -> bar で処理される", () => {
-    const { chords, punctuations } = parseScore("!bar 1/1\n!note memo\n1");
+    const { chords, punctuations } = parseScore("!bar 0/1 1/1\n!note memo\n1");
     const layout = computeRowLayouts(chords, punctuations)[0]!;
     const positioned = getPositionedPunctuationsInRenderOrder(
       getPositionedPunctuations(punctuations, layout),
@@ -28,7 +28,7 @@ describe("punctation layout", () => {
   });
 
   test("bar と note は同じ上側領域で接する", () => {
-    const { chords, punctuations } = parseScore("!bar 1/1\n!note memo\n1");
+    const { chords, punctuations } = parseScore("!bar 0/1 1/1\n!note memo\n1");
     const layout = computeRowLayouts(chords, punctuations)[0]!;
     const positioned = getPositionedPunctuations(punctuations, layout);
     const note = positioned.find(({ punctuation }) => punctuation.type === "note");
@@ -43,7 +43,7 @@ describe("punctation layout", () => {
   });
 
   test("bar と gradualTempoChange は同じ帯で重なる", () => {
-    const { chords, punctuations } = parseScore("!bar 1/1\n!gradualTempoChange 0/1 1/1 up\n1");
+    const { chords, punctuations } = parseScore("!bar 0/1 1/1\n!gradualTempoChange 0/1 1/1 up\n1");
     const layout = computeRowLayouts(chords, punctuations)[0]!;
     const positioned = getPositionedPunctuations(punctuations, layout);
     const bar = positioned.find(({ punctuation }) => punctuation.type === "bar")!;
@@ -56,7 +56,7 @@ describe("punctation layout", () => {
   });
 
   test("note -> bar -> note は note -> note -> bar に正規化される", () => {
-    const { chords, punctuations } = parseScore("!note first\n!bar 1/1\n!note second\n1");
+    const { chords, punctuations } = parseScore("!note first\n!bar 0/1 1/1\n!note second\n1");
     const layout = computeRowLayouts(chords, punctuations)[0]!;
     const positioned = getPositionedPunctuationsInRenderOrder(
       getPositionedPunctuations(punctuations, layout),

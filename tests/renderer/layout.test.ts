@@ -86,7 +86,7 @@ describe("row layout", () => {
   });
 
   test("bar がある行では上方向の余白が増えて行が高くなる", () => {
-    const { chords, punctuations } = parseScore("!bar 1/1\n1");
+    const { chords, punctuations } = parseScore("!bar 0/1 1/1\n1");
     const layouts = computeRowLayouts(chords, punctuations);
     const chordBounds = getChordBounds(chords[0]!);
 
@@ -109,8 +109,8 @@ describe("row layout", () => {
 
   test("bar と note が同居すると単体よりさらに上方向の余白が増える", () => {
     const noteOnly = parseScore("!note memo\n1");
-    const barOnly = parseScore("!bar 1/1\n1");
-    const noteAndBar = parseScore("!bar 1/1\n!note memo\n1");
+    const barOnly = parseScore("!bar 0/1 1/1\n1");
+    const noteAndBar = parseScore("!bar 0/1 1/1\n!note memo\n1");
 
     const noteOnlyLayout = computeRowLayouts(noteOnly.chords, noteOnly.punctuations)[0]!;
     const barOnlyLayout = computeRowLayouts(barOnly.chords, barOnly.punctuations)[0]!;
@@ -123,8 +123,8 @@ describe("row layout", () => {
   });
 
   test("bar と gradualTempoChange は同じ帯に重なり追加の上余白を生まない", () => {
-    const barOnly = parseScore("!bar 1/1\n1");
-    const barAndGradual = parseScore("!bar 1/1\n!gradualTempoChange 0/1 1/1 up\n1");
+    const barOnly = parseScore("!bar 0/1 1/1\n1");
+    const barAndGradual = parseScore("!bar 0/1 1/1\n!gradualTempoChange 0/1 1/1 up\n1");
 
     const barOnlyLayout = computeRowLayouts(barOnly.chords, barOnly.punctuations)[0]!;
     const barAndGradualLayout = computeRowLayouts(
@@ -137,8 +137,8 @@ describe("row layout", () => {
   });
 
   test("note -> bar -> note は note が2段積まれた分だけ上方向の余白が増える", () => {
-    const noteAndBar = parseScore("!note first\n!bar 1/1\n1");
-    const noteBarNote = parseScore("!note first\n!bar 1/1\n!note second\n1");
+    const noteAndBar = parseScore("!note first\n!bar 0/1 1/1\n1");
+    const noteBarNote = parseScore("!note first\n!bar 0/1 1/1\n!note second\n1");
 
     const noteAndBarLayout = computeRowLayouts(noteAndBar.chords, noteAndBar.punctuations)[0]!;
     const noteBarNoteLayout = computeRowLayouts(noteBarNote.chords, noteBarNote.punctuations)[0]!;

@@ -210,25 +210,37 @@ describe("parseScore", () => {
       const key = punctuations.find((p) => p.type === "key");
       expect(key).toMatchObject({ type: "key", from: 0, to: 7 });
     });
-    test("!bar 1/1 → { type: 'bar', length: [1,1] }", () => {
-      const { punctuations } = parseScore("!bar 1/1\n1");
+    test("!bar 0/1 1/1 → { type: 'bar', position: [0,0,1], length: [1,1] }", () => {
+      const { punctuations } = parseScore("!bar 0/1 1/1\n1");
       const bar = punctuations.find((p) => p.type === "bar");
-      expect(bar).toMatchObject({ type: "bar", length: [1, 1] });
+      expect(bar).toMatchObject({ type: "bar", position: [0, 0, 1], length: [1, 1] });
     });
-    test("!bar 1/1 120 → tempo: 120", () => {
-      const { punctuations } = parseScore("!bar 1/1 120\n1");
+    test("!bar 1/2 1/4 120 → tempo: 120", () => {
+      const { punctuations } = parseScore("!bar 1/2 1/4 120\n1");
       const bar = punctuations.find((p) => p.type === "bar");
-      expect(bar).toMatchObject({ tempo: 120 });
+      expect(bar).toMatchObject({ position: [0, 1, 2], length: [1, 4], tempo: 120 });
     });
-    test("!bar 1/1 4/4 → timeSignature: [4,4]", () => {
-      const { punctuations } = parseScore("!bar 1/1 4/4\n1");
+    test("!bar 1/2 1/4 4/4 → timeSignature: [4,4]", () => {
+      const { punctuations } = parseScore("!bar 1/2 1/4 4/4\n1");
       const bar = punctuations.find((p) => p.type === "bar");
-      expect(bar).toMatchObject({ timeSignature: [4, 4] });
+      expect(bar).toMatchObject({ position: [0, 1, 2], length: [1, 4], timeSignature: [4, 4] });
     });
-    test("!bar 1/1 120 4/4 → tempo と timeSignature 両方", () => {
-      const { punctuations } = parseScore("!bar 1/1 120 4/4\n1");
+    test("!bar 1/2 1/4 120 4/4 → tempo と timeSignature 両方", () => {
+      const { punctuations } = parseScore("!bar 1/2 1/4 120 4/4\n1");
       const bar = punctuations.find((p) => p.type === "bar");
-      expect(bar).toMatchObject({ tempo: 120, timeSignature: [4, 4] });
+      expect(bar).toMatchObject({
+        position: [0, 1, 2],
+        length: [1, 4],
+        tempo: 120,
+        timeSignature: [4, 4],
+      });
+    });
+    test("旧形式の tempo 指定だけの !bar はエラー", () => {
+      expect(() => parseScore("!bar 1/1 120\n1")).toThrow();
+    });
+    test("!bar の引数不足と不正オプションはエラー", () => {
+      expect(() => parseScore("!bar 1/1\n1")).toThrow();
+      expect(() => parseScore("!bar 0/1 1/1 fast\n1")).toThrow();
     });
     test("!note text → { type: 'note', text }", () => {
       const { punctuations } = parseScore("!note intro memo\n1 ;");
@@ -251,10 +263,10 @@ describe("parseScore", () => {
       expect(g).toMatchObject({ direction: "down" });
     });
     test("指示の row は次のコード行の row に対応する", () => {
-      const { punctuations } = parseScore("1\n!bar 1/1\n2");
+      const { punctuations } = parseScore("1\n!bar 0/1 1/1\n2");
       const bar = punctuations.find((p) => p.type === "bar");
-      if (bar && "row" in bar) {
-        expect(bar.row).toBe(1);
+      if (bar && "position" in bar) {
+        expect(bar.position[0]).toBe(1);
       }
     });
     test("!note は次のコード行の row に対応する", () => {

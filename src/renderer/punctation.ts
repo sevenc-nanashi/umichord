@@ -43,7 +43,7 @@ export type Punctuation =
     }
   | {
       type: "bar";
-      row: number;
+      position: Position;
       length: Length;
       tempo?: number;
       timeSignature?: [numerator: number, denominator: number];
@@ -469,8 +469,9 @@ function renderBar(
 ) {
   const staticBounds = getStaticPunctuationBounds(p, layout);
   const barBottomY = (bounds ?? staticBounds).maxY;
-  const positionRight = new Fraction(p.length[0], p.length[1]);
-  const barLeft = paddingLeft + gap;
+  const positionLeft = new Fraction(p.position[1], p.position[2]);
+  const positionRight = positionLeft.add(new Fraction(p.length[0], p.length[1]));
+  const barLeft = lerp(paddingLeft + gap, width - paddingRight - gap, positionLeft.toNumber());
   const barRight = lerp(paddingLeft + gap, width - paddingRight - gap, positionRight.toNumber());
   canvas.beginPath();
   canvas.moveTo(barLeft, barBottomY - barHeight);
