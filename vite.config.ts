@@ -26,6 +26,7 @@ export default defineConfig({
       },
     }),
   ],
+  base: "/umichord",
   staged: {
     "*": "vp check --fix",
   },
