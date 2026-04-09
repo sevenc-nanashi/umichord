@@ -77,14 +77,21 @@ onMounted(() => {
           <p>サンプルのコード譜の著作権はそれぞれの作者に帰属します。</p>
           <h3 un-text="lg primary" un-mt="4">利用規約</h3>
           <p>
-            （未定）<br />
             このツールのソースコードはMIT Licenseで公開しています。<a
               href="https://github.com/sevenc-nanashi/umichord/blob/main/LICENSE"
               target="_blank"
               un-text="primary hover:primary/90"
               >sevenc-nanashi/umichord: LICENSE</a
             >を参照してください。<br />
-            このツールによって出力された海茶式コード表記は（ライセンス未定）
+            このツールによって出力された海茶式コード表記を使用した場合は、
+            <a
+              href="https://x.com/ocean_tea_cafe"
+              target="_blank"
+              un-text="primary hover:primary/90"
+            >
+              海茶</a
+            >
+            様の名前をクレジットすることを推奨します。
           </p>
           <h3 un-text="lg primary" un-mt="4">謝辞</h3>
           <p>
