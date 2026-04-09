@@ -8,6 +8,16 @@ function applyScoreText(text: string) {
   scoreText.value = text;
 }
 
+function findDemoLinks(text: string): { label: string; url: string }[] {
+  const regex = /(?<label>\S+?)： (?<url>https?:\/\/\S+)/g;
+  const links = [];
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    links.push({ label: match.groups!.label, url: match.groups!.url });
+  }
+  return links;
+}
+
 const demos = [
   {
     name: "構文デモ",
@@ -29,7 +39,17 @@ const demos = [
     <h2 un-text="lg">サンプル</h2>
     <ul un-list="disc inside">
       <li v-for="demo in demos" :key="demo.name">
-        <button un-text="primary" @click="applyScoreText(demo.text)">{{ demo.name }}</button>
+        <button un-text="primary" @click="applyScoreText(demo.text)">
+          {{ demo.name }}
+        </button>
+        <template v-if="findDemoLinks(demo.text).length > 0">
+          <span un-text="sm">（</span>
+          <template v-for="(link, index) in findDemoLinks(demo.text)" :key="index">
+            <span v-if="index > 0" un-text="sm">、</span>
+            <a :href="link.url" target="_blank" un-text="sm primary">{{ link.label }}</a>
+          </template>
+          <span un-text="sm">）</span>
+        </template>
       </li>
     </ul>
   </div>
