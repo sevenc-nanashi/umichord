@@ -540,9 +540,9 @@ function renderGradualTempoChange(
     canvas.fill();
   } else {
     canvas.beginPath();
-    canvas.moveTo(barCenter, lineY + gradualTempoChangeTipSize);
-    canvas.lineTo(barCenter - gradualTempoChangeTipSize / 2, lineY + gradualTempoChangePadding);
-    canvas.lineTo(barCenter + gradualTempoChangeTipSize / 2, lineY + gradualTempoChangePadding);
+    canvas.moveTo(barCenter - gradualTempoChangeTipSize / 2, lineY - gradualTempoChangeTipSize);
+    canvas.lineTo(barCenter + gradualTempoChangeTipSize / 2, lineY - gradualTempoChangeTipSize);
+    canvas.lineTo(barCenter, lineY - gradualTempoChangePadding);
     canvas.closePath();
     canvas.fill();
   }
