@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import Header from "./components/Header.vue";
 import Renderer from "./components/Renderer.vue";
-import Editor from "./components/Editor.vue";
+import EditorSection from "./components/EditorSection.vue";
 
 const activeTab = ref<"renderer" | "editor">("renderer");
 </script>
@@ -29,7 +29,7 @@ const activeTab = ref<"renderer" | "editor">("renderer");
       <Renderer />
     </section>
     <section class="app-editor" :class="{ inactive: activeTab !== 'editor' }">
-      <Editor />
+      <EditorSection />
     </section>
   </div>
 </template>

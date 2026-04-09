@@ -3,9 +3,6 @@ import * as monaco from "monaco-editor";
 import { onMounted, onUnmounted, useTemplateRef, watch } from "vue";
 import { LANGUAGE_ID, monarchTokens, themeData } from "../lib/monacoLanguage";
 import { parseError, renderError, scoreText } from "../stores/score";
-import syntaxDemo from "../assets/demos/syntax.txt?raw";
-import kumohitodeDemo from "../assets/demos/kumohitode.txt?raw";
-import kotoDemo from "../assets/demos/koto.txt?raw";
 
 // Monaco は Web Worker を必要とするが、構文ハイライトのみの用途なのでスタブを使用
 (self as unknown as { MonacoEnvironment: monaco.Environment }).MonacoEnvironment = {
@@ -16,7 +13,7 @@ import kotoDemo from "../assets/demos/koto.txt?raw";
 };
 
 // 言語・テーマの登録（重複登録を避ける）
-if (!monaco.languages.getLanguages().some((l) => l.id === LANGUAGE_ID)) {
+if (!monaco.languages.getLanguages().some((language) => language.id === LANGUAGE_ID)) {
   monaco.languages.register({ id: LANGUAGE_ID });
   monaco.languages.setMonarchTokensProvider(LANGUAGE_ID, monarchTokens);
 }
@@ -26,11 +23,6 @@ const container = useTemplateRef("container");
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
 let disposables: monaco.IDisposable[] = [];
 let resizeObserver: ResizeObserver | null = null;
-
-function applyScoreText(text: string) {
-  scoreText.value = text;
-  editor?.setValue(text);
-}
 
 onMounted(() => {
   if (!container.value) return;
@@ -57,9 +49,23 @@ onMounted(() => {
 
   disposables.push(
     editor.onDidChangeModelContent(() => {
-      scoreText.value = editor!.getValue();
+      if (editor === null) {
+        throw new Error("Editor is not initialized");
+      }
+      scoreText.value = editor.getValue();
     }),
   );
+
+  const stopScoreWatch = watch(scoreText, (text) => {
+    if (editor === null) {
+      return;
+    }
+    if (editor.getValue() === text) {
+      return;
+    }
+    editor.setValue(text);
+  });
+  disposables.push({ dispose: stopScoreWatch });
 
   const stopErrorWatch = watch(
     [parseError, renderError],
@@ -98,37 +104,12 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  disposables.forEach((d) => d.dispose());
+  disposables.forEach((disposable) => disposable.dispose());
   resizeObserver?.disconnect();
   editor?.dispose();
 });
-
-const demos = [
-  {
-    name: "構文デモ",
-    text: syntaxDemo,
-  },
-  {
-    name: "クモヒトデのうまる砂の上で / 海茶",
-    text: kumohitodeDemo,
-  },
-  {
-    name: "六時、言の葉の木の下で。 / 名無し。",
-    text: kotoDemo,
-  },
-];
 </script>
 
 <template>
-  <div un-h="full" un-border="l-1 primary" un-grid="~ rows-[auto_1fr]">
-    <div un-p="4">
-      <h2 un-text="lg">サンプル</h2>
-      <ul un-list="disc inside">
-        <li v-for="demo in demos" :key="demo.name">
-          <button un-text="primary" @click="applyScoreText(demo.text)">{{ demo.name }}</button>
-        </li>
-      </ul>
-    </div>
-    <div ref="container" un-h="full" un-border="t-1 primary" />
-  </div>
+  <div ref="container" un-h="full" un-border="t-1 primary" />
 </template>
