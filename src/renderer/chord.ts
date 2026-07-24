@@ -999,14 +999,14 @@ function drawSlashBass(
       break;
     case "iv":
       canvas.beginPath();
-      canvas.moveTo(baseX, baseY);
+      canvas.moveTo(baseX, baseY + slashBassSize / 2);
       canvas.bezierCurveTo(
         baseX,
-        baseY + slashBassSize / 2,
-        baseX + slashBassSize,
-        baseY + slashBassSize / 2,
+        baseY,
         baseX + slashBassSize,
         baseY,
+        baseX + slashBassSize,
+        baseY + slashBassSize / 2,
       );
       canvas.stroke();
       break;
